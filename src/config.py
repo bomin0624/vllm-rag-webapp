@@ -54,3 +54,6 @@ CHUNK_SIZE = 2048
 CHUNK_OVERLAP = 300
 
 RANDOM_SEED = 42
+# RAGAS Evaluation Models
+JUDGE_EMBEDDING_MODEL = "mixedbread-ai/mxbai-embed-large-v1"
+JUDGE_LLM_MODEL = "gpt-4o-mini-2024-07-18"

@@ -18,6 +18,8 @@ from ragas.metrics.collections import AnswerRelevancy, Faithfulness
 from src.config import (
     DATASET_URL,
     DATASETS_DIR,
+    JUDGE_EMBEDDING_MODEL,
+    JUDGE_LLM_MODEL,
     LOG_DIR,
     RANDOM_SEED,
     VECTOR_DB_DIR,
@@ -56,14 +58,14 @@ def setting_evaluation():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     judge_llm = llm_factory(
-        "gpt-4o-mini-2024-07-18",
+        JUDGE_LLM_MODEL,
         provider="openai",
         client=client,
         max_tokens=4096,
     )
 
     judge_embeddings = HuggingFaceEmbeddings(
-        model="mixedbread-ai/mxbai-embed-large-v1",
+        model=JUDGE_EMBEDDING_MODEL,
         device=device,
     )
     faithfulness = Faithfulness(llm=judge_llm)
