@@ -63,6 +63,31 @@ vLLM names models by the Hugging Face repo id it was served with, so
 `GENERATE_MODEL` has to match what the `vllm` service was launched with. Both
 read the same variable, so setting it once keeps them together.
 
+## Frontend origins (CORS)
+
+The API reads `CORS_ALLOW_ORIGINS` at startup to configure which frontend
+origins browsers can use to call it. When unset, it allows
+`http://localhost:5173` and `http://127.0.0.1:5173` for local development.
+
+For deployment, set a comma-separated list of frontend origins, including
+the protocol and any non-default port, without a path or trailing slash:
+
+```bash
+CORS_ALLOW_ORIGINS=https://rag.example.com,https://staging.example.com make run
+```
+
+The configured list replaces the local defaults. Surrounding whitespace
+and empty list entries are ignored; an explicitly empty value allows no
+cross-origin requests. Restart the API after changing the value.
+
+For Docker Compose, set the variable in your shell or the repository-root
+`.env` file; Compose forwards it to the API container. For AWS, set it in
+the API service's runtime environment to the deployed frontend's origin.
+
+This is separate from the frontend's `PUBLIC_API_BASE_URL`: that variable
+tells the frontend where the API is, while `CORS_ALLOW_ORIGINS` tells the
+API which frontend origins to allow.
+
 ## Run locally
 
 Install the Python dependencies:

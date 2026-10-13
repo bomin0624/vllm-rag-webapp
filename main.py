@@ -5,6 +5,7 @@ startup phase, and exposes the API routes.
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -61,14 +62,17 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     configure_logging()
     app = FastAPI(title="RAG Web App", lifespan=lifespan)
-    # The SvelteKit development server runs on port 5173. Keep this explicit
-    # instead of allowing every origin so browser clients can call /query
-    # during local development without weakening the production default.
+    # Default to the SvelteKit development server; deployments can supply
+    # their frontend origins without changing the application code.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
+            origin.strip()
+            for origin in os.getenv(
+                "CORS_ALLOW_ORIGINS",
+                "http://localhost:5173,http://127.0.0.1:5173",
+            ).split(",")
+            if origin.strip()
         ],
         allow_credentials=False,
         allow_methods=["GET", "POST"],
