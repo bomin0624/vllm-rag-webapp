@@ -1,8 +1,11 @@
-import { PUBLIC_API_BASE_URL } from '$env/static/public';
+import { dev } from '$app/environment';
+import * as publicEnv from '$env/static/public';
 
 import type { QueryResponse } from '$lib/types/rag';
 
-const apiBaseUrl = PUBLIC_API_BASE_URL || 'http://localhost:8000';
+// A namespace import also works when the optional development variable is absent.
+const env: Record<string, string | undefined> = publicEnv;
+const apiBaseUrl = env.PUBLIC_API_BASE_URL?.trim() || (dev ? 'http://localhost:8000' : '');
 
 export async function queryRag(query: string): Promise<QueryResponse> {
 	const response = await fetch(`${apiBaseUrl}/query`, {
@@ -12,7 +15,11 @@ export async function queryRag(query: string): Promise<QueryResponse> {
 	});
 
 	if (!response.ok) {
-		throw new Error('Request failed. Check that the RAG API is running.');
+		const detail = await response
+			.json()
+			.then((body) => body?.detail)
+			.catch(() => null);
+		throw new Error(detail ?? `Request failed (${response.status}).`);
 	}
 
 	return response.json() as Promise<QueryResponse>;
