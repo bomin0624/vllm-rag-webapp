@@ -74,9 +74,7 @@
 		error = '';
 	}
 
-	function requestDeleteChat(event: MouseEvent, chatId: string) {
-		// Prevent the delete click from also selecting this chat.
-		event.stopPropagation();
+	function requestDeleteChat(chatId: string) {
 		// Save the target ID so the confirmation dialog can delete it later.
 		chatPendingDeletion = chatId;
 	}
@@ -204,7 +202,7 @@
 								>
 							</button>
 							<button
-								onclick={(event) => requestDeleteChat(event, chat.id)}
+								onclick={(event) => requestDeleteChat(chat.id)}
 								class="m-2 grid size-7 place-items-center text-slate-700 opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 focus:opacity-100"
 								aria-label={`Delete ${chat.title}`}
 								title="Delete chat"
