@@ -39,8 +39,14 @@
 	});
 
 	$effect(() => {
-		if (browser && hasLoaded) {
+		if (!browser || !hasLoaded) {
+			return;
+		}
+
+		try {
 			localStorage.setItem(storageKey, JSON.stringify(chats));
+		} catch {
+			error = 'History storage is full — delete an old chat.';
 		}
 	});
 
