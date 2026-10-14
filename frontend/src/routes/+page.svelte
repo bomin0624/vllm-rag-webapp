@@ -13,6 +13,7 @@
 	let isLoading = $state(false);
 	let hasLoaded = $state(false);
 	let chatPendingDeletion = $state<string | null>(null);
+	let deleteDialog: HTMLDialogElement;
 	let activeChat = $derived(chats.find((chat) => chat.id === activeChatId) ?? null);
 
 	onMount(() => {
@@ -78,6 +79,7 @@
 
 	function requestDeleteChat(chatId: string) {
 		chatPendingDeletion = chatId;
+		deleteDialog.showModal();
 	}
 
 	function deleteChat() {
@@ -85,6 +87,7 @@
 		if (!chatId) return;
 
 		chatPendingDeletion = null;
+		deleteDialog.close();
 
 		const remainingChats = chats.filter((chat) => chat.id !== chatId);
 		chats = remainingChats;
@@ -191,7 +194,7 @@
 								>
 							</button>
 							<button
-								onclick={(event) => requestDeleteChat(chat.id)}
+								onclick={() => requestDeleteChat(chat.id)}
 								class="m-2 grid size-7 place-items-center text-slate-700 opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 focus:opacity-100"
 								aria-label={`Delete ${chat.title}`}
 								title="Delete chat"
@@ -338,45 +341,39 @@
 		</div>
 	</div>
 
-	{#if chatPendingDeletion}
-		<div
-			class="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4 backdrop-blur-sm"
-			role="presentation"
-		>
-			<dialog
-				open
-				class="fixed top-1/2 right-auto bottom-auto left-1/2 z-50 m-0 block h-fit w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 border border-cyan-300/60 bg-[#080b0b] shadow-2xl shadow-cyan-950/30"
-				aria-labelledby="delete-dialog-title"
-			>
-				<div class="flex items-center justify-between border-b border-white/10 px-5 py-3">
-					<h2 id="delete-dialog-title" class="text-xs font-bold tracking-[0.16em] text-cyan-300">
-						CONFIRM_DELETION
-					</h2>
-					<span class="text-xs text-red-400">[ WARNING ]</span>
-				</div>
-				<div class="px-5 py-6 text-sm leading-7 text-slate-300">
-					<p>
-						<span class="font-bold text-cyan-300">&gt;</span> Delete this chat and all of its saved queries?
-					</p>
-					<p class="mt-2 text-xs text-slate-600">THIS ACTION CANNOT BE UNDONE.</p>
-				</div>
-				<div
-					class="flex justify-end gap-3 border-t border-white/10 px-5 py-4 text-xs font-bold tracking-wider"
-				>
-					<button
-						onclick={() => (chatPendingDeletion = null)}
-						class="border border-slate-600 px-3 py-2 text-slate-300 transition hover:border-slate-300 hover:text-white"
-					>
-						CANCEL
-					</button>
-					<button
-						onclick={deleteChat}
-						class="border border-red-400 bg-red-400 px-3 py-2 text-black transition hover:bg-red-300"
-					>
-						DELETE CHAT
-					</button>
-				</div>
-			</dialog>
+	<dialog
+		bind:this={deleteDialog}
+		onclose={() => (chatPendingDeletion = null)}
+		class="fixed top-1/2 right-auto bottom-auto left-1/2 m-0 h-fit w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 border border-cyan-300/60 bg-[#080b0b] shadow-2xl shadow-cyan-950/30 backdrop:bg-black/75 backdrop:backdrop-blur-sm"
+		aria-labelledby="delete-dialog-title"
+	>
+		<div class="flex items-center justify-between border-b border-white/10 px-5 py-3">
+			<h2 id="delete-dialog-title" class="text-xs font-bold tracking-[0.16em] text-cyan-300">
+				CONFIRM_DELETION
+			</h2>
+			<span class="text-xs text-red-400">[ WARNING ]</span>
 		</div>
-	{/if}
+		<div class="px-5 py-6 text-sm leading-7 text-slate-300">
+			<p>
+				<span class="font-bold text-cyan-300">&gt;</span> Delete this chat and all of its saved queries?
+			</p>
+			<p class="mt-2 text-xs text-slate-600">THIS ACTION CANNOT BE UNDONE.</p>
+		</div>
+		<div
+			class="flex justify-end gap-3 border-t border-white/10 px-5 py-4 text-xs font-bold tracking-wider"
+		>
+			<button
+				onclick={() => deleteDialog.close()}
+				class="border border-slate-600 px-3 py-2 text-slate-300 transition hover:border-slate-300 hover:text-white"
+			>
+				CANCEL
+			</button>
+			<button
+				onclick={deleteChat}
+				class="border border-red-400 bg-red-400 px-3 py-2 text-black transition hover:bg-red-300"
+			>
+				DELETE CHAT
+			</button>
+		</div>
+	</dialog>
 </main>
