@@ -11,6 +11,8 @@ services:
       - LANGSMITH_PROJECT=${LANGSMITH_PROJECT:-rag-dev}
       - LLM_BASE_URL=${LLM_BASE_URL:-http://vllm:8000}
       - LLM_TIMEOUT=${LLM_TIMEOUT:-120}
+      # Unset uses the local development origins in main.py.
+      - CORS_ALLOW_ORIGINS
       # Unset falls through to the defaults in src/config.py.
       - GENERATE_MODEL
       - LLM_API_KEY

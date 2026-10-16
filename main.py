@@ -5,9 +5,11 @@ startup phase, and exposes the API routes.
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import GENERATE_MODEL, LOG_DIR, VECTOR_DB_DIR
 from src.model import get_llm_client
@@ -60,6 +62,22 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     configure_logging()
     app = FastAPI(title="RAG Web App", lifespan=lifespan)
+    # Default to the SvelteKit development server; deployments can supply
+    # their frontend origins without changing the application code.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            origin.strip()
+            for origin in os.getenv(
+                "CORS_ALLOW_ORIGINS",
+                "http://localhost:5173,http://127.0.0.1:5173",
+            ).split(",")
+            if origin.strip()
+        ],
+        allow_credentials=False,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
+    )
     app.include_router(router)
     return app
 
