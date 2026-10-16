@@ -68,6 +68,11 @@ secrets.
 You can preview the built app with `npm run preview`; it uses the address already
 embedded in the build and does not require the variable to be set again.
 
-Before deploying, select a SvelteKit [adapter](https://svelte.dev/docs/kit/adapters)
-for the hosting environment. The project currently uses `adapter-auto`; setting
-the API address alone does not configure AWS hosting.
+The project uses `@sveltejs/adapter-node` to build a standalone Node.js server.
+After building, start the server with:
+
+```sh
+node build
+```
+
+Setting the API address alone does not configure AWS hosting.
