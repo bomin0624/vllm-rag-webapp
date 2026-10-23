@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { queryRag } from '#lib/api/rag.js';
 	import { createChatHistory } from '#lib/chat-history.js';
+	import { createId } from '#lib/create-id.js';
 	import type { ChatEntry, ChatSession } from '#lib/types/chat.js';
 	import { onMount } from 'svelte';
 
@@ -39,10 +40,6 @@
 		void history.update((savedChats) => (savedChats.length > 0 ? savedChats : [firstChat]));
 		return () => history.destroy();
 	});
-
-	function createId() {
-		return crypto.randomUUID();
-	}
 
 	function createChatSession(): ChatSession {
 		return {
