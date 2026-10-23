@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
-	import { queryRag } from '$lib/api/rag';
-	import type { ChatEntry, ChatSession } from '$lib/types/chat';
+	import { browser } from '$app/env';
+	import { queryRag } from '#lib/api/rag.js';
+	import type { ChatEntry, ChatSession } from '#lib/types/chat.js';
 	import { onMount } from 'svelte';
 
 	const storageKey = 'rag-chat-history';

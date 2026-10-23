@@ -1,6 +1,7 @@
 # RAG frontend
 
-The frontend uses SvelteKit, Vite, and npm. Run the following commands from `frontend/`.
+The frontend uses SvelteKit 3, Vite, and npm. Install Node.js 22.17+ and run the
+following commands from `frontend/`.
 
 ## Developing
 
@@ -56,8 +57,9 @@ PUBLIC_API_BASE_URL=https://api.example.com npm run build
 Process environment variables override values from `.env` files. `npm run check`
 works without `.env`; CI builds must provide `PUBLIC_API_BASE_URL` explicitly.
 
-The API address is embedded in the frontend at build time through
-`$env/static/public`. Build separately for staging and production if they use
+The API address is declared as a public, static variable in `src/env.ts` and
+embedded in the frontend at build time through `$app/env/public`.
+Build separately for staging and production if they use
 different API addresses, and rebuild when the address changes. Changing a server's
 environment variable after the build does not update the frontend.
 

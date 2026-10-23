@@ -1,11 +1,9 @@
-import { dev } from '$app/environment';
-import * as publicEnv from '$env/static/public';
+import { dev } from '$app/env';
+import { PUBLIC_API_BASE_URL } from '$app/env/public';
 
-import type { QueryResponse } from '$lib/types/rag';
+import type { QueryResponse } from '#lib/types/rag.js';
 
-// A namespace import also works when the optional development variable is absent.
-const env: Record<string, string | undefined> = publicEnv;
-const apiBaseUrl = env.PUBLIC_API_BASE_URL?.trim() || (dev ? 'http://localhost:8000' : '');
+const apiBaseUrl = PUBLIC_API_BASE_URL?.trim() || (dev ? 'http://localhost:8000' : '');
 
 export async function queryRag(query: string): Promise<QueryResponse> {
 	const response = await fetch(`${apiBaseUrl}/query`, {

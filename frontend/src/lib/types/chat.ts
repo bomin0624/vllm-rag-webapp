@@ -1,4 +1,4 @@
-import type { QueryResponse } from '$lib/types/rag';
+import type { QueryResponse } from '#lib/types/rag.js';
 
 export type ChatEntry = {
 	id: string;

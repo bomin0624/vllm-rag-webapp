@@ -29,7 +29,7 @@ embeddings in `vectordatabase/`.
 
 - Python 3.12+
 - [uv](https://docs.astral.sh/uv/)
-- Node.js 22.12+ and npm (for the frontend)
+- Node.js 22.17+ and npm (for the frontend)
 - Docker Desktop with Compose
 - An NVIDIA GPU, effectively required by vLLM
 
