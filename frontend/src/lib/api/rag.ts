@@ -3,7 +3,8 @@ import { PUBLIC_API_BASE_URL } from '$app/env/public';
 
 import type { QueryResponse } from '#lib/types/rag.js';
 
-const apiBaseUrl = PUBLIC_API_BASE_URL?.trim() || (dev ? 'http://localhost:8000' : '');
+const configuredUrl = PUBLIC_API_BASE_URL?.trim().replace(/\/+$/, '');
+const apiBaseUrl = configuredUrl || (dev ? 'http://localhost:8000' : '');
 
 export async function queryRag(query: string): Promise<QueryResponse> {
 	const response = await fetch(`${apiBaseUrl}/query`, {
