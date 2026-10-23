@@ -20,7 +20,9 @@ export async function queryRag(query: string): Promise<QueryResponse> {
 			.json()
 			.then((body) => body?.detail)
 			.catch(() => null);
-		throw new Error(detail ?? `Request failed (${response.status}).`);
+		throw new Error(
+			typeof detail === 'string' && detail ? detail : `Request failed (${response.status}).`
+		);
 	}
 
 	return response.json() as Promise<QueryResponse>;
