@@ -384,17 +384,3 @@ is not calculated for that stage: initial retrieval is evaluated at
 | Vector, DIM=256 | 10.26 s (31.68 ms/query) | 1850.46 s (5711.29 ms/query) | 1860.72 s | 0.3798 |
 | Hybrid, DIM=256 | 14.03 s (43.31 ms/query) | 1850.01 s (5709.91 ms/query) | 1864.04 s | 0.3798 |
 
-## Project layout
-
-```text
-main.py                   FastAPI application and startup lifecycle
-src/routes.py             Health and query endpoints
-src/generator.py          Prompt construction and answer generation
-src/model.py              LLMClient protocol and the vLLM client
-src/retriever/            Chroma, BM25, and reranking implementation
-src/config.py             Models, retrieval, chunking, and path settings
-evaluate/evaluation.py    BEIR retrieval evaluation entry point
-tests/                    Unit tests
-docker-compose.yml        API and vLLM services
-Makefile                  Stack targets, dev commands, and CI checks
-```
