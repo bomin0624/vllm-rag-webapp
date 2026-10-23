@@ -128,8 +128,10 @@
 					})
 					.sort((first, second) => second.updatedAt - first.updatedAt)
 			);
-			// Preserve the input on failure so the user can retry.
-			query = '';
+			// Preserve any new input typed while waiting for the response.
+			if (query.trim() === question) {
+				query = '';
+			}
 		} catch (caughtError) {
 			error =
 				caughtError instanceof Error
