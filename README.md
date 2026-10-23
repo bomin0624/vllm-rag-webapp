@@ -29,6 +29,7 @@ embeddings in `vectordatabase/`.
 
 - Python 3.12+
 - [uv](https://docs.astral.sh/uv/)
+- Node.js 22.12+ and npm (for the frontend)
 - Docker Desktop with Compose
 - An NVIDIA GPU, effectively required by vLLM
 
@@ -178,6 +179,35 @@ LANGSMITH_PROJECT=rag-dev
 
 Start the stack with `make backend`, then view the `rag-dev` project in
 LangSmith.
+
+## Open the frontend
+
+Start the API and vLLM using `make vllm` or `make backend` as described above.
+If you use `make vllm`, leave that terminal running. Once the API is ready at
+`http://localhost:8000`, open a separate terminal and run these commands from
+the repository root:
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser. When running
+under WSL2, you can open this address in your Windows browser. Keep the frontend
+terminal running while using the app; press `Ctrl+C` to stop it. On later runs,
+you only need `cd frontend` and `npm run dev` unless dependencies have changed.
+
+The frontend uses `http://localhost:8000` for the API by default, so no frontend
+`.env` file is required for local development. To use a different API address,
+copy `frontend/.env.example` to `frontend/.env`, update `PUBLIC_API_BASE_URL`,
+and restart the frontend dev server.
+
+Vite prints the frontend URL in the terminal. If port `5173` is busy and Vite
+selects another port, add that origin to
+[`CORS_ALLOW_ORIGINS`](#frontend-origins-cors) and restart the API.
+
+See [frontend/README.md](frontend/README.md) for build and deployment instructions.
 
 ## LangSmith tracing
 
