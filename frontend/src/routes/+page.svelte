@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { browser } from '$app/env';
 	import { queryRag } from '#lib/api/rag.js';
+	import { createChatHistory } from '#lib/chat-history.js';
 	import type { ChatEntry, ChatSession } from '#lib/types/chat.js';
 	import { onMount } from 'svelte';
 
-	const storageKey = 'rag-chat-history';
+	let history: ReturnType<typeof createChatHistory>;
 
 	let chats = $state<ChatSession[]>([]);
 	let activeChatId = $state<string | null>(null);
@@ -12,7 +12,6 @@
 	let error = $state('');
 	let storageError = $state('');
 	let isLoading = $state(false);
-	let hasLoaded = $state(false);
 	let isHistoryOpen = $state(false);
 	let historyToggle: HTMLButtonElement;
 	let chatPendingDeletion = $state<string | null>(null);
@@ -20,39 +19,25 @@
 	let activeChat = $derived(chats.find((chat) => chat.id === activeChatId) ?? null);
 
 	onMount(() => {
-		const savedChats = localStorage.getItem(storageKey);
-
-		if (savedChats) {
-			try {
-				const parsedChats = JSON.parse(savedChats) as ChatSession[];
-				chats = Array.isArray(parsedChats) ? parsedChats : [];
-			} catch {
-				chats = [];
+		history = createChatHistory({
+			storage: localStorage,
+			events: window,
+			locks: navigator.locks,
+			onChange(updatedChats, error) {
+				chats = updatedChats;
+				storageError = error;
+				if (!chats.some((chat) => chat.id === activeChatId)) {
+					activeChatId = chats[0]?.id ?? null;
+				}
+				if (chatPendingDeletion && !chats.some((chat) => chat.id === chatPendingDeletion)) {
+					chatPendingDeletion = null;
+					deleteDialog.close();
+				}
 			}
-		}
-
-		if (chats.length === 0) {
-			const firstChat = createChatSession();
-			chats = [firstChat];
-			activeChatId = firstChat.id;
-		} else {
-			activeChatId = chats[0].id;
-		}
-
-		hasLoaded = true;
-	});
-
-	$effect(() => {
-		if (!browser || !hasLoaded) {
-			return;
-		}
-
-		try {
-			localStorage.setItem(storageKey, JSON.stringify(chats));
-			storageError = '';
-		} catch {
-			storageError = 'History storage is full — delete an old chat.';
-		}
+		});
+		const firstChat = createChatSession();
+		void history.update((savedChats) => (savedChats.length > 0 ? savedChats : [firstChat]));
+		return () => history.destroy();
 	});
 
 	function createId() {
@@ -68,13 +53,14 @@
 		};
 	}
 
-	function startNewChat() {
+	async function startNewChat() {
 		const newChat = createChatSession();
-		chats = [newChat, ...chats];
+		await history.update((savedChats) => [newChat, ...savedChats]);
 		activeChatId = newChat.id;
 		query = '';
 		error = '';
 		closeHistory();
+		return newChat.id;
 	}
 
 	function selectChat(chatId: string) {
@@ -95,23 +81,22 @@
 		deleteDialog.showModal();
 	}
 
-	function deleteChat() {
+	async function deleteChat() {
 		const chatId = chatPendingDeletion;
 		if (!chatId) return;
 
 		chatPendingDeletion = null;
 		deleteDialog.close();
 
-		const remainingChats = chats.filter((chat) => chat.id !== chatId);
-		chats = remainingChats;
-
-		if (activeChatId === chatId) {
-			if (remainingChats.length > 0) {
-				activeChatId = remainingChats[0].id;
-			} else {
-				// Always keep one chat available when the last chat is deleted.
-				startNewChat();
-			}
+		const replacement = createChatSession();
+		await history.update((savedChats) => {
+			const remainingChats = savedChats.filter((chat) => chat.id !== chatId);
+			return remainingChats.length > 0 ? remainingChats : [replacement];
+		});
+		if (activeChatId === replacement.id) {
+			query = '';
+			error = '';
+			closeHistory();
 		}
 	}
 
@@ -124,33 +109,28 @@
 
 		if (!question || isLoading) return;
 
-		let chatId = activeChatId;
-		if (!chatId) {
-			startNewChat();
-			chatId = activeChatId;
-		}
-
-		if (!chatId) return;
-
 		isLoading = true;
 		error = '';
 
 		try {
+			const chatId = activeChatId ?? (await startNewChat());
 			const response = await queryRag(question);
 			const entry: ChatEntry = { id: createId(), query: question, response };
 
-			chats = chats
-				.map((chat) => {
-					if (chat.id !== chatId) return chat;
+			await history.update((savedChats) =>
+				savedChats
+					.map((chat) => {
+						if (chat.id !== chatId) return chat;
 
-					return {
-						...chat,
-						title: chat.entries.length === 0 ? makeTitle(question) : chat.title,
-						entries: [...chat.entries, entry],
-						updatedAt: Date.now()
-					};
-				})
-				.sort((first, second) => second.updatedAt - first.updatedAt);
+						return {
+							...chat,
+							title: chat.entries.length === 0 ? makeTitle(question) : chat.title,
+							entries: [...chat.entries, entry],
+							updatedAt: Date.now()
+						};
+					})
+					.sort((first, second) => second.updatedAt - first.updatedAt)
+			);
 			// Preserve the input on failure so the user can retry.
 			query = '';
 		} catch (caughtError) {

@@ -29,6 +29,7 @@ development default.
 ## Checks
 
 ```sh
+npm test
 npm run check
 npm run lint
 ```

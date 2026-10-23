@@ -8,6 +8,7 @@
     "#lib/*": "./src/lib/*"
   },
   "scripts": {
+    "test": "node --experimental-strip-types --test --test-isolation=none test/*.test.ts",
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
