@@ -12,6 +12,8 @@ export async function queryRag(query: string): Promise<QueryResponse> {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ query })
+	}).catch(() => {
+		throw new Error(`Cannot reach the RAG API at ${apiBaseUrl || '/query'}. Is it running?`);
 	});
 
 	if (!response.ok) {
