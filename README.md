@@ -5,19 +5,9 @@ indexes the BEIR `nfcorpus` dataset in Chroma, retrieves and reranks relevant
 passages, and asks a model served locally by vLLM to generate an answer. Each
 query response also includes the passages used as sources.
 
-## How it works
+## System Architecture
 
-```mermaid
-flowchart LR
-    Client -->|POST /query| API[FastAPI]
-    API --> Retriever
-    Retriever --> Vector[Chroma vector search]
-    Retriever --> BM25[BM25 search]
-    Vector --> Reranker[Cross-encoder reranker]
-    BM25 --> Reranker
-    Reranker --> LLM[vLLM]
-    LLM --> API
-```
+![System architecture](assets/system_architecture.png)
 
 By default, the application uses hybrid retrieval:
 
