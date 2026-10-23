@@ -8,6 +8,17 @@ VECTOR_DB_DIR = PROJECT_ROOT / "vectordatabase"
 DATASETS_DIR = PROJECT_ROOT / "datasets"
 LOG_DIR = PROJECT_ROOT / "log"
 
+# Default to the SvelteKit development server; deployments can supply
+# their frontend origins without changing the application code.
+CORS_ALLOW_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOW_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
+    if origin.strip()
+]
+
 DATASET = "nfcorpus"
 DATASET_URL = (
     "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/"
