@@ -201,7 +201,7 @@
 							</button>
 							<button
 								onclick={() => requestDeleteChat(chat.id)}
-								class="m-2 grid size-11 place-items-center text-slate-500 transition hover:bg-red-500/10 hover:text-red-400 lg:size-7 lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100"
+								class="m-2 grid size-11 place-items-center text-slate-500 transition hover:bg-red-500/10 hover:text-red-400 lg:size-7 lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100 lg:pointer-coarse:opacity-100"
 								aria-label={`Delete ${chat.title}`}
 								title="Delete chat"
 							>
