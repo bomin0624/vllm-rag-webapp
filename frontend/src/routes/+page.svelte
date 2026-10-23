@@ -166,7 +166,7 @@
 
 			<div class="p-4">
 				<button
-					onclick={createChat}
+					onclick={startNewChat}
 					class="w-full border border-cyan-300 bg-cyan-300 px-3 py-2 text-left text-xs font-bold tracking-wider text-black transition hover:bg-cyan-100"
 				>
 					+ NEW CHAT
@@ -231,7 +231,7 @@
 				</p>
 				<div class="flex shrink-0 items-center gap-2 text-[10px] font-bold sm:text-xs">
 					<button
-						onclick={createChat}
+						onclick={startNewChat}
 						class="border border-cyan-400/70 px-2 py-1 text-cyan-300 lg:hidden"
 					>
 						+ NEW
