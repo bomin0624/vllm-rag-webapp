@@ -10,8 +10,11 @@
 	let activeChatId = $state<string | null>(null);
 	let query = $state('');
 	let error = $state('');
+	let storageError = $state('');
 	let isLoading = $state(false);
 	let hasLoaded = $state(false);
+	let isHistoryOpen = $state(false);
+	let historyToggle: HTMLButtonElement;
 	let chatPendingDeletion = $state<string | null>(null);
 	let deleteDialog: HTMLDialogElement;
 	let activeChat = $derived(chats.find((chat) => chat.id === activeChatId) ?? null);
@@ -46,8 +49,9 @@
 
 		try {
 			localStorage.setItem(storageKey, JSON.stringify(chats));
+			storageError = '';
 		} catch {
-			error = 'History storage is full — delete an old chat.';
+			storageError = 'History storage is full — delete an old chat.';
 		}
 	});
 
@@ -70,11 +74,20 @@
 		activeChatId = newChat.id;
 		query = '';
 		error = '';
+		closeHistory();
 	}
 
 	function selectChat(chatId: string) {
 		activeChatId = chatId;
 		error = '';
+		closeHistory();
+	}
+
+	function closeHistory() {
+		if (!isHistoryOpen) return;
+
+		isHistoryOpen = false;
+		historyToggle?.focus();
 	}
 
 	function requestDeleteChat(chatId: string) {
@@ -157,8 +170,22 @@
 </svelte:head>
 
 <main class="min-h-screen bg-[#060707] font-mono text-slate-200">
+	<div class="border-b border-white/10 px-5 py-3 sm:px-8 lg:hidden">
+		<button
+			bind:this={historyToggle}
+			onclick={() => (isHistoryOpen = !isHistoryOpen)}
+			aria-expanded={isHistoryOpen}
+			aria-controls="chat-sidebar"
+			class="min-h-11 border border-cyan-400/70 px-3 py-2 text-xs font-bold tracking-wider text-cyan-300"
+		>
+			{isHistoryOpen ? 'CLOSE HISTORY' : 'CHAT HISTORY'}
+		</button>
+	</div>
 	<div class="mx-auto grid min-h-screen max-w-[1600px] lg:grid-cols-[240px_minmax(0,1fr)]">
-		<aside class="hidden border-r border-white/10 bg-black/25 lg:flex lg:flex-col">
+		<aside
+			id="chat-sidebar"
+			class={`max-h-[70dvh] flex-col border-b border-white/10 bg-black/25 lg:flex lg:max-h-none lg:border-r lg:border-b-0 ${isHistoryOpen ? 'flex' : 'hidden'}`}
+		>
 			<div class="border-b border-white/10 px-5 py-7">
 				<p class="text-xl font-bold tracking-[0.18em] text-cyan-300">RAG</p>
 				<p class="mt-2 text-[10px] tracking-[0.15em] text-slate-600">V0.1 // LOCAL</p>
@@ -195,7 +222,7 @@
 							</button>
 							<button
 								onclick={() => requestDeleteChat(chat.id)}
-								class="m-2 grid size-7 place-items-center text-slate-700 opacity-0 transition group-hover:opacity-100 hover:bg-red-500/10 hover:text-red-400 focus:opacity-100"
+								class="m-2 grid size-11 place-items-center text-slate-500 transition hover:bg-red-500/10 hover:text-red-400 lg:size-7 lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100"
 								aria-label={`Delete ${chat.title}`}
 								title="Delete chat"
 							>
@@ -217,7 +244,13 @@
 
 			<div class="border-t border-white/10 px-5 py-5">
 				<p class="text-xs font-bold text-slate-400">LOCAL_STORAGE</p>
-				<p class="mt-1 text-xs text-emerald-400">STATUS: SAVED</p>
+				<p
+					class="mt-1 text-xs"
+					class:text-red-400={!!storageError}
+					class:text-emerald-400={!storageError}
+				>
+					STATUS: {storageError ? 'NOT SAVED' : 'SAVED'}
+				</p>
 			</div>
 		</aside>
 
@@ -289,6 +322,16 @@
 					>
 						<span class="font-bold text-red-400">ERROR:</span>
 						{error}
+					</div>
+				{/if}
+
+				{#if storageError}
+					<div
+						class="mt-5 border border-red-400/50 bg-red-950/20 p-4 text-sm text-red-200"
+						role="alert"
+					>
+						<span class="font-bold text-red-400">STORAGE ERROR:</span>
+						{storageError}
 					</div>
 				{/if}
 
