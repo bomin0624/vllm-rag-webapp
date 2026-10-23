@@ -64,7 +64,7 @@
 		};
 	}
 
-	function createChat() {
+	function startNewChat() {
 		const newChat = createChatSession();
 		chats = [newChat, ...chats];
 		activeChatId = newChat.id;
@@ -97,7 +97,7 @@
 				activeChatId = remainingChats[0].id;
 			} else {
 				// Always keep one chat available when the last chat is deleted.
-				createChat();
+				startNewChat();
 			}
 		}
 	}
@@ -113,7 +113,7 @@
 
 		let chatId = activeChatId;
 		if (!chatId) {
-			createChat();
+			startNewChat();
 			chatId = activeChatId;
 		}
 
