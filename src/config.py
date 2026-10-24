@@ -24,6 +24,8 @@ DATASET_URL = (
     "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/"
     f"{DATASET}.zip"
 )
+DEFAULT_EVAL_SPLIT = "dev"
+
 
 # Number of candidates fetched by the initial retriever. Kept large for recall.
 SEARCH_K = 200

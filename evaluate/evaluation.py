@@ -1,9 +1,6 @@
 import argparse
-import csv
-import json
 import logging
 import time
-from pathlib import Path
 
 from beir import util
 
@@ -15,6 +12,7 @@ from src.config import (
     DATASET,
     DATASET_URL,
     DATASETS_DIR,
+    DEFAULT_EVAL_SPLIT,
     EMBED_TRUNCATE_DIM,
     EMBEDDING_MODEL,
     LOG_DIR,
@@ -24,6 +22,7 @@ from src.config import (
     SEARCH_K,
     VECTOR_DB_DIR,
 )
+from src.dataset_utils import load_qrels, load_queries
 from src.retriever.retriever import (
     HybridRetriever,
     RAGRetriever,
@@ -31,34 +30,8 @@ from src.retriever.retriever import (
 from src.retriever.utils import initialize_vector_database
 
 
-# query relevance judgement
-def load_qrels(data_path: str, split: str = "dev"):
-    qrels_path = Path(data_path) / "qrels" / f"{split}.tsv"
-    qrels = {}
-    with qrels_path.open(encoding="utf-8") as f:
-        reader = csv.reader(f, delimiter="\t")
-        next(reader)  # skip header row
-        for row in reader:
-            query_id, doc_id, relevance = row
-            if query_id not in qrels:
-                qrels[query_id] = {}
-            qrels[query_id][doc_id] = int(relevance)
-    return qrels
-
-
-def load_queries(data_path: str, qrels: dict):
-    queries_path = Path(data_path) / "queries.jsonl"
-    queries = {}
-    for line in queries_path.open(encoding="utf-8"):
-        query = json.loads(line)
-        query_id = query["_id"]
-        if query_id in qrels:
-            queries[query_id] = query["text"]
-    return queries
-
-
 def evaluate_retriever(
-    retriever_type: str = RETRIEVER_TYPE, split: str = "dev"
+    retriever_type: str = RETRIEVER_TYPE, split: str = DEFAULT_EVAL_SPLIT
 ) -> None:
     """
     Evaluate the retriever performance using Recall@30
@@ -224,7 +197,7 @@ if __name__ == "__main__":
         "--split",
         type=str,
         choices=["train", "dev", "test"],
-        default="dev",
+        default=DEFAULT_EVAL_SPLIT,
         help="Choose the dataset split to evaluate on",
     )
     args = parser.parse_args()

@@ -18,6 +18,7 @@ from src.config import (
     EMBEDDING_MODEL,
     RERANK_BATCH_SIZE,
 )
+from src.dataset_utils import load_subset_doc_ids
 
 
 def build_bm25_documents(collection: dict) -> list[Document]:
@@ -127,12 +128,18 @@ def initialize_vector_database(db_directory: str) -> None:
 
     print("Vector database not found. Creating new database...")
     data_path = util.download_and_unzip(DATASET_URL, str(DATASETS_DIR))
+    if DATASET == "msmarco":
+        dev_ids = load_subset_doc_ids(data_path, split="dev")
+        test_ids = load_subset_doc_ids(data_path, split="test")
+        selected_doc_ids = dev_ids | test_ids
     corpus_path = Path(data_path) / "corpus.jsonl"
     documents = []
 
     with corpus_path.open(encoding="utf-8") as f:
         for line in f:
             data = json.loads(line)
+            if DATASET == "msmarco" and data["_id"] not in selected_doc_ids:
+                continue
             documents.append(
                 Document(
                     page_content=data["title"] + "." + " " + data["text"],
