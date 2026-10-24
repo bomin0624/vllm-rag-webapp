@@ -1,24 +1,18 @@
 # RAG Web App
 
-A local retrieval-augmented generation (RAG) API built with FastAPI. It
-indexes the BEIR `nfcorpus` dataset in Chroma, retrieves and reranks relevant
-passages, and asks a model served locally by vLLM to generate an answer. Each
-query response also includes the passages used as sources.
+A local retrieval-augmented generation (RAG) web application with a **SvelteKit
+frontend**, a **FastAPI backend**, and a **vLLM inference server**. The backend
+indexes the BEIR `nfcorpus` dataset in Chroma, combines semantic and keyword
+retrieval, reranks relevant passages, and calls a locally served model to
+generate an answer with its supporting source documents.
+
+The frontend runs separately from Docker Compose and communicates directly with
+the FastAPI service over HTTP/JSON. Docker Compose runs the two GPU-enabled
+backend services: `rag-api` and `vllm`.
 
 ## System Architecture
 
 ![System architecture](assets/system_architecture.png)
-
-By default, the application uses hybrid retrieval:
-
-1. Chroma retrieves semantically similar chunks using
-   `mixedbread-ai/mxbai-embed-large-v1` embeddings.
-2. BM25 retrieves keyword-matched chunks from the same collection.
-3. Reciprocal-rank fusion combines both result sets.
-4. `BAAI/bge-reranker-v2-m3` reranks the candidates and keeps the best three
-   distinct source documents.
-5. The selected content is supplied to the model served by vLLM
-   (`Qwen/Qwen2.5-1.5B-Instruct` by default).
 
 The vector database is created automatically on the first application start.
 The build downloads `nfcorpus`, splits its documents into 2,048-character
@@ -29,13 +23,10 @@ embeddings in `vectordatabase/`.
 
 - Python 3.12+
 - [uv](https://docs.astral.sh/uv/)
-- Node.js 22.17+ and npm (for the frontend)
+- Node.js 22.17+ and npm
 - Docker Desktop with Compose
 - An NVIDIA GPU, effectively required by vLLM
 
-The supplied Compose configuration requests a GPU for every service; remove the
-`deploy.resources.reservations.devices` blocks from `docker-compose.yml` when
-running without NVIDIA GPU support.
 
 ## LLM server
 
@@ -54,30 +45,6 @@ vLLM names models by the Hugging Face repo id it was served with, so
 `GENERATE_MODEL` has to match what the `vllm` service was launched with. Both
 read the same variable, so setting it once keeps them together.
 
-## Frontend origins (CORS)
-
-The API reads `CORS_ALLOW_ORIGINS` at startup to configure which frontend
-origins browsers can use to call it. When unset, it allows
-`http://localhost:5173` and `http://127.0.0.1:5173` for local development.
-
-For deployment, set a comma-separated list of frontend origins, including
-the protocol and any non-default port, without a path or trailing slash:
-
-```bash
-CORS_ALLOW_ORIGINS=https://rag.example.com,https://staging.example.com make run
-```
-
-The configured list replaces the local defaults. Surrounding whitespace
-and empty list entries are ignored; an explicitly empty value allows no
-cross-origin requests. Restart the API after changing the value.
-
-For Docker Compose, set the variable in your shell or the repository-root
-`.env` file; Compose forwards it to the API container. For AWS, set it in
-the API service's runtime environment to the deployed frontend's origin.
-
-This is separate from the frontend's `PUBLIC_API_BASE_URL`: that variable
-tells the frontend where the API is, while `CORS_ALLOW_ORIGINS` tells the
-API which frontend origins to allow.
 
 ## Run locally
 
@@ -100,33 +67,6 @@ make vllm
 | Fetch the model | downloaded on first serve |
 | Serve the app | `uvicorn --reload` on `localhost:8000` |
 
-The API is available at `http://localhost:8000`. On the first start, model
-downloads and vector-database construction can take several minutes.
-
-To serve a different model, set `GENERATE_MODEL` on the same line:
-
-```bash
-GENERATE_MODEL=Qwen/Qwen2.5-1.5B-Instruct make vllm
-```
-
-`GENERATE_MODEL` is read by the app and by the `vllm` service itself, so
-setting it once keeps the client and the server on the same model. Set
-`HF_TOKEN` as well for gated Hugging Face repos such as `meta-llama/*` —
-without it vLLM fails at startup rather than falling back to anything.
-
-vLLM serves on host port `8001` because the app already owns `8000`, and it
-starts with `--gpu-memory-utilization=0.45` and `--max-model-len=4096` so it
-leaves room for the retrieval models on the same GPU. Raise both on a larger
-card.
-
-### Running vLLM under WSL2
-
-The `vllm` service sets `VLLM_WSL2_ENABLE_PIN_MEMORY=1`. On WSL2, vLLM keeps
-pinned host memory disabled by default even on kernels that support it, and
-the engine's V2 model runner then aborts at startup with
-`RuntimeError: UVA is not available`. The variable is only read on WSL, so it
-is inert on native Linux. Override it to `0` if pinned allocations turn out to
-be unsupported on your driver.
 
 ### Running the steps separately
 
@@ -158,8 +98,7 @@ network it reaches vLLM by service name, so it runs with
 `LLM_BASE_URL=http://vllm:8000`.
 
 Compose persists datasets, Chroma data, and logs in the local `datasets/`,
-`vectordatabase/`, and `log/` directories. vLLM caches Hugging Face weights in
-`$HF_HOME` (default `~/.cache/huggingface`).
+`vectordatabase/`, and `log/` directories.
 
 ### Docker Compose
 
@@ -192,22 +131,6 @@ cd frontend
 npm ci
 npm run dev
 ```
-
-Open [http://localhost:5173](http://localhost:5173) in your browser. When running
-under WSL2, you can open this address in your Windows browser. Keep the frontend
-terminal running while using the app; press `Ctrl+C` to stop it. On later runs,
-you only need `cd frontend` and `npm run dev` unless dependencies have changed.
-
-The frontend uses `http://localhost:8000` for the API by default, so no frontend
-`.env` file is required for local development. To use a different API address,
-copy `frontend/.env.example` to `frontend/.env`, update `PUBLIC_API_BASE_URL`,
-and restart the frontend dev server.
-
-Vite prints the frontend URL in the terminal. If port `5173` is busy and Vite
-selects another port, add that origin to
-[`CORS_ALLOW_ORIGINS`](#frontend-origins-cors) and restart the API.
-
-See [frontend/README.md](frontend/README.md) for build and deployment instructions.
 
 ## LangSmith tracing
 
@@ -280,28 +203,6 @@ It must contain between 1 and 1,000 characters.
 }
 ```
 
-Interactive API documentation is available at `http://localhost:8000/docs`.
-
-## Configuration
-
-Project defaults live in `src/config.py`.
-
-| Setting | Default | Purpose |
-| --- | --- | --- |
-| `GENERATE_MODEL` | `Qwen/Qwen2.5-1.5B-Instruct` | Model used to generate answers. |
-| `RETRIEVER_TYPE` | `hybrid` | Retrieval mode: `hybrid` or `vector`. |
-| `SEARCH_K` | `200` | Candidate chunks collected before reranking. |
-| `RERANK_RETURN_N` | `3` | Number of distinct source documents returned. |
-| `RERANK_BATCH_SIZE` | `16` | Candidate pairs per reranker forward pass; larger values use more GPU memory. |
-| `EMBED_TRUNCATE_DIM` | `512` | Embedding dimension; may be overridden with an environment variable. |
-| `LLM_BASE_URL` | `http://localhost:8001` | vLLM server URL. |
-| `LLM_TIMEOUT` | `120` | vLLM request timeout in seconds. |
-| `LLM_API_KEY` | `EMPTY` | Only used if vLLM was started with `--api-key`. |
-
-The persisted Chroma collection has a fixed embedding dimension. If you change
-`EMBED_TRUNCATE_DIM` or the embedding model, remove `vectordatabase/` and let
-the application rebuild it before querying again.
-
 ## Development and evaluation
 
 ```bash
@@ -331,8 +232,6 @@ the embedding and reranker models load onto the GPU, so stop vLLM first with
 `make backend-down` if it is holding the card.
 
 
-Evaluation logs are written to `log/`.
-
 ### Recorded evaluation results
 
 The following results were recorded after a warm-up query using
@@ -340,7 +239,8 @@ The following results were recorded after a warm-up query using
 `BAAI/bge-reranker-v2-m3` for reranking. An em dash indicates that the metric
 is not calculated for that stage: initial retrieval is evaluated at
 `k = 1, 5, 10, 30`, while reranked retrieval is evaluated at
-`k = 1, 3, 5, 10`.
+`k = 1, 3, 5, 10`. 
+(Using FP32 precision and a reranker batch size of 64)
 
 #### DIM = 512
 
