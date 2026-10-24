@@ -8,12 +8,12 @@ from langsmith import traceable
 from sentence_transformers import CrossEncoder
 
 from src.config import (
+    DATASET,
     EMBEDDING_MODEL,
     RERANK_RETURN_N,
     RERANKER_MODEL,
     RETRIEVER_TYPE,
     SEARCH_K,
-    DATASET,
 )
 from src.retriever.utils import (
     build_bm25_documents,

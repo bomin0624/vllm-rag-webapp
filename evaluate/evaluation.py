@@ -1,13 +1,14 @@
 import argparse
+import csv
 import json
 import logging
 import time
-import csv
+from pathlib import Path
 
 from beir import util
+
 # from beir.datasets.data_loader import GenericDataLoader
 from beir.retrieval.evaluation import EvaluateRetrieval
-from pathlib import Path
 from tqdm import tqdm
 
 from src.config import (
@@ -54,7 +55,6 @@ def load_queries(data_path: str, qrels: dict):
         if query_id in qrels:
             queries[query_id] = query["text"]
     return queries
-        
 
 
 def evaluate_retriever(

@@ -11,12 +11,12 @@ from sentence_transformers import CrossEncoder
 from src.config import (
     CHUNK_OVERLAP,
     CHUNK_SIZE,
+    DATASET,
     DATASET_URL,
     DATASETS_DIR,
     EMBED_TRUNCATE_DIM,
     EMBEDDING_MODEL,
     RERANK_BATCH_SIZE,
-    DATASET,
 )
 
 
@@ -115,10 +115,12 @@ def initialize_vector_database(db_directory: str) -> None:
         if stored_dim is not None:
             if stored_dim != EMBED_TRUNCATE_DIM:
                 raise RuntimeError(
-                    f"Vector database at {db_directory} stores {stored_dim}-dim "
-                    f"vectors, but EMBED_TRUNCATE_DIM is {EMBED_TRUNCATE_DIM}. "
-                    f"A database is built at a single fixed dimension and is not "
-                    f"rebuilt automatically, so delete it and let it rebuild:\n"
+                    f"Vector database at {db_directory} "
+                    f"stores {stored_dim}-dim vectors, "
+                    f"but EMBED_TRUNCATE_DIM is {EMBED_TRUNCATE_DIM}. "
+                    "A database is built at a single fixed dimension "
+                    "and is not rebuilt automatically, "
+                    "so delete it and let it rebuild:\n"
                     f"    rm -rf {db_directory} && make run"
                 )
             return
