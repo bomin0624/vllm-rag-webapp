@@ -232,7 +232,7 @@ the embedding and reranker models load onto the GPU, so stop vLLM first with
 `make backend-down` if it is holding the card.
 
 
-### Recorded evaluation results
+### NFCorpus dataset
 
 The following results were recorded after a warm-up query using
 `mixedbread-ai/mxbai-embed-large-v1` for embeddings and
@@ -315,3 +315,71 @@ is not calculated for that stage: initial retrieval is evaluated at
 | Vector, DIM=256 | 10.26 s (31.68 ms/query) | 1850.46 s (5711.29 ms/query) | 1860.72 s | 0.3798 |
 | Hybrid, DIM=256 | 14.03 s (43.31 ms/query) | 1850.01 s (5709.91 ms/query) | 1864.04 s | 0.3798 |
 
+### MS MARCO dataset
+
+Retrieval searched the existing `msmarco` Chroma collection containing
+**16,558 documents**: the union of document IDs appearing in the dev and test
+qrels, including documents with a relevance score of zero.
+
+These runs used `mixedbread-ai/mxbai-embed-large-v1` for 512-dimensional embeddings
+and `BAAI/bge-reranker-v2-m3` for reranking. The reranker used FP16 precision and
+a batch size of 16. Dense-only retrieval reranked the top 200 candidates.
+
+#### DIM = 512
+
+**Dense-only retrieval** (`RETRIEVER=vector`, `SPLIT=test`)
+
+| Metric | Initial retrieval | Reranked retrieval |
+| --- | ---: | ---: |
+| NDCG@1 | 0.8178 | 0.8062 |
+| NDCG@3 | — | 0.7821 |
+| NDCG@5 | 0.7764 | 0.7793 |
+| NDCG@10 | 0.7463 | 0.7720 |
+| NDCG@30 | 0.7354 | — |
+| Recall@1 | 0.0232 | 0.0237 |
+| Recall@3 | — | 0.0704 |
+| Recall@5 | 0.1091 | 0.1094 |
+| Recall@10 | 0.1742 | 0.1925 |
+| Recall@30 | 0.3860 | — |
+| MAP@1 | 0.0232 | 0.0237 |
+| MAP@3 | — | 0.0700 |
+| MAP@5 | 0.1065 | 0.1066 |
+| MAP@10 | 0.1661 | 0.1813 |
+| MAP@30 | 0.3371 | — |
+| P@1 | 0.9535 | 0.9535 |
+| P@3 | — | 0.9302 |
+| P@5 | 0.9116 | 0.9163 |
+| P@10 | 0.8395 | 0.8837 |
+| P@30 | 0.7279 | — |
+
+**Hybrid retrieval: dense + sparse (BM25)** (`RETRIEVER=hybrid`, `SPLIT=test`)
+
+| Metric | Initial retrieval | Reranked retrieval |
+| --- | ---: | ---: |
+| NDCG@1 | 0.6124 | 0.8062 |
+| NDCG@3 | — | 0.7821 |
+| NDCG@5 | 0.6575 | 0.7793 |
+| NDCG@10 | 0.6680 | 0.7721 |
+| NDCG@30 | 0.6644 | — |
+| Recall@1 | 0.0139 | 0.0237 |
+| Recall@3 | — | 0.0704 |
+| Recall@5 | 0.0875 | 0.1094 |
+| Recall@10 | 0.1635 | 0.1925 |
+| Recall@30 | 0.3525 | — |
+| MAP@1 | 0.0139 | 0.0237 |
+| MAP@3 | — | 0.0700 |
+| MAP@5 | 0.0731 | 0.1066 |
+| MAP@10 | 0.1335 | 0.1813 |
+| MAP@30 | 0.2792 | — |
+| P@1 | 0.7907 | 0.9535 |
+| P@3 | — | 0.9302 |
+| P@5 | 0.8093 | 0.9163 |
+| P@10 | 0.7977 | 0.8837 |
+| P@30 | 0.6861 | — |
+
+#### Speed–performance trade-off
+
+| Configuration | Initial retrieval time | Reranking time | Total time | Reranked NDCG@3 |
+| --- | ---: | ---: | ---: | ---: |
+| Vector, DIM=512, test (43 queries) | 3.83 s (89.07 ms/query) | 25.02 s (581.90 ms/query) | 28.85 s | 0.7821 |
+| Hybrid, DIM=512, test (43 queries) | 5.13 s (119.30 ms/query) | 39.54 s (919.44 ms/query) | 44.67 s | 0.7821 |

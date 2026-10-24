@@ -16,6 +16,7 @@ from src.config import (
     EMBED_TRUNCATE_DIM,
     EMBEDDING_MODEL,
     RERANK_BATCH_SIZE,
+    DATASET,
 )
 
 
@@ -90,6 +91,7 @@ def _stored_embedding_dim(db_directory: str) -> int | None:
     store = Chroma(
         persist_directory=db_directory,
         embedding_function=build_embedding_model(EMBEDDING_MODEL),
+        collection_name=DATASET,
     )
     got = store.get(limit=1, include=["embeddings"])
     embeddings = got.get("embeddings")
@@ -110,15 +112,16 @@ def initialize_vector_database(db_directory: str) -> None:
         # TODO: Consider rebuild the vector database if the embedding model or
         # truncate dimension changed.
         stored_dim = _stored_embedding_dim(db_directory)
-        if stored_dim is not None and stored_dim != EMBED_TRUNCATE_DIM:
-            raise RuntimeError(
-                f"Vector database at {db_directory} stores {stored_dim}-dim "
-                f"vectors, but EMBED_TRUNCATE_DIM is {EMBED_TRUNCATE_DIM}. "
-                f"A database is built at a single fixed dimension and is not "
-                f"rebuilt automatically, so delete it and let it rebuild:\n"
-                f"    rm -rf {db_directory} && make run"
-            )
-        return
+        if stored_dim is not None:
+            if stored_dim != EMBED_TRUNCATE_DIM:
+                raise RuntimeError(
+                    f"Vector database at {db_directory} stores {stored_dim}-dim "
+                    f"vectors, but EMBED_TRUNCATE_DIM is {EMBED_TRUNCATE_DIM}. "
+                    f"A database is built at a single fixed dimension and is not "
+                    f"rebuilt automatically, so delete it and let it rebuild:\n"
+                    f"    rm -rf {db_directory} && make run"
+                )
+            return
 
     print("Vector database not found. Creating new database...")
     data_path = util.download_and_unzip(DATASET_URL, str(DATASETS_DIR))
@@ -153,6 +156,7 @@ def initialize_vector_database(db_directory: str) -> None:
         documents=chunks,
         embedding=embedding,
         persist_directory=db_directory,
+        collection_name=DATASET,
         collection_metadata={"hnsw:space": "cosine"},
     )
     print(f"Vector store created and persisted to {db_directory}")

@@ -1,13 +1,17 @@
 import argparse
+import json
 import logging
 import time
+import csv
 
 from beir import util
-from beir.datasets.data_loader import GenericDataLoader
+# from beir.datasets.data_loader import GenericDataLoader
 from beir.retrieval.evaluation import EvaluateRetrieval
+from pathlib import Path
 from tqdm import tqdm
 
 from src.config import (
+    DATASET,
     DATASET_URL,
     DATASETS_DIR,
     EMBED_TRUNCATE_DIM,
@@ -26,6 +30,33 @@ from src.retriever.retriever import (
 from src.retriever.utils import initialize_vector_database
 
 
+# query relevance judgement
+def load_qrels(data_path: str, split: str = "dev"):
+    qrels_path = Path(data_path) / "qrels" / f"{split}.tsv"
+    qrels = {}
+    with qrels_path.open(encoding="utf-8") as f:
+        reader = csv.reader(f, delimiter="\t")
+        next(reader)  # skip header row
+        for row in reader:
+            query_id, doc_id, relevance = row
+            if query_id not in qrels:
+                qrels[query_id] = {}
+            qrels[query_id][doc_id] = int(relevance)
+    return qrels
+
+
+def load_queries(data_path: str, qrels: dict):
+    queries_path = Path(data_path) / "queries.jsonl"
+    queries = {}
+    for line in queries_path.open(encoding="utf-8"):
+        query = json.loads(line)
+        query_id = query["_id"]
+        if query_id in qrels:
+            queries[query_id] = query["text"]
+    return queries
+        
+
+
 def evaluate_retriever(
     retriever_type: str = RETRIEVER_TYPE, split: str = "dev"
 ) -> None:
@@ -34,7 +65,7 @@ def evaluate_retriever(
     for initial retrieval and NDCG@3 for reranked results.
     """
     LOG_DIR.mkdir(parents=True, exist_ok=True)
-    log_file_path = str(LOG_DIR / f"nfcorpus_{retriever_type}_{split}.log")
+    log_file_path = str(LOG_DIR / f"{DATASET}_{retriever_type}_{split}.log")
 
     logging.basicConfig(
         level=logging.INFO,
@@ -46,7 +77,9 @@ def evaluate_retriever(
     )
 
     data_path = util.download_and_unzip(DATASET_URL, str(DATASETS_DIR))
-    corpus, queries, qrels = GenericDataLoader(data_path).load(split=split)
+    # corpus, queries, qrels = GenericDataLoader(data_path).load(split=split)
+    qrels = load_qrels(data_path, split)
+    queries = load_queries(data_path, qrels)
 
     # print(queries.items()) # {'PLAIN-2':
     # 'Do Cholesterol Statin Drugs Cause Breast Cancer?'}

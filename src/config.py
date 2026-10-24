@@ -19,7 +19,7 @@ CORS_ALLOW_ORIGINS = [
     if origin.strip()
 ]
 
-DATASET = "nfcorpus"
+DATASET = "msmarco" # nfcorpus or msmarco
 DATASET_URL = (
     "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/"
     f"{DATASET}.zip"

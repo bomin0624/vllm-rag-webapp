@@ -13,6 +13,7 @@ from src.config import (
     RERANKER_MODEL,
     RETRIEVER_TYPE,
     SEARCH_K,
+    DATASET,
 )
 from src.retriever.utils import (
     build_bm25_documents,
@@ -33,6 +34,7 @@ class RAGRetriever:
         self.vector_store = Chroma(
             persist_directory=db_directory,
             embedding_function=self.embedding,
+            collection_name=DATASET,
         )
         # https://zenn.dev/pipon_tech_blog/articles/8cdb27830236c5
         self.retriever = self.vector_store.as_retriever(
