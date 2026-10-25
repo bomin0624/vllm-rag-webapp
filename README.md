@@ -317,13 +317,15 @@ is not calculated for that stage: initial retrieval is evaluated at
 
 ### MS MARCO dataset
 
-Retrieval searched the existing `msmarco` Chroma collection containing
+Retrieval searched an `msmarco` Chroma collection containing
 **16,558 documents**: the union of document IDs appearing in the dev and test
-qrels, including documents with a relevance score of zero.
+qrels, including documents with a relevance score of zero. Results below use
+the 43 test queries and their relevance judgments.
 
-These runs used `mixedbread-ai/mxbai-embed-large-v1` for 512-dimensional embeddings
-and `BAAI/bge-reranker-v2-m3` for reranking. The reranker used FP16 precision and
-a batch size of 16. Dense-only retrieval reranked the top 200 candidates.
+These runs used `mixedbread-ai/mxbai-embed-large-v1` for embeddings truncated to
+the dimensions shown below and `BAAI/bge-reranker-v2-m3` for reranking. The
+reranker used FP16 precision and a batch size of 16. Dense-only retrieval
+reranked the top 200 candidates.
 
 #### DIM = 512
 
@@ -377,9 +379,66 @@ a batch size of 16. Dense-only retrieval reranked the top 200 candidates.
 | P@10 | 0.7977 | 0.8837 |
 | P@30 | 0.6861 | — |
 
+#### DIM = 256
+
+The 256-dimensional index was rebuilt from the selected 16,558 MS MARCO
+documents, producing 16,558 chunks, before this evaluation.
+
+**Dense-only retrieval** (`RETRIEVER=vector`, `SPLIT=test`)
+
+| Metric | Initial retrieval | Reranked retrieval |
+| --- | ---: | ---: |
+| NDCG@1 | 0.8488 | 0.8062 |
+| NDCG@3 | — | 0.7821 |
+| NDCG@5 | 0.7795 | 0.7793 |
+| NDCG@10 | 0.7457 | 0.7721 |
+| NDCG@30 | 0.7354 | — |
+| Recall@1 | 0.0256 | 0.0237 |
+| Recall@3 | — | 0.0704 |
+| Recall@5 | 0.1066 | 0.1094 |
+| Recall@10 | 0.1756 | 0.1925 |
+| Recall@30 | 0.3829 | — |
+| MAP@1 | 0.0256 | 0.0237 |
+| MAP@3 | — | 0.0700 |
+| MAP@5 | 0.1037 | 0.1066 |
+| MAP@10 | 0.1647 | 0.1813 |
+| MAP@30 | 0.3329 | — |
+| P@1 | 0.9767 | 0.9535 |
+| P@3 | — | 0.9302 |
+| P@5 | 0.8977 | 0.9163 |
+| P@10 | 0.8349 | 0.8837 |
+| P@30 | 0.7248 | — |
+
+**Hybrid retrieval: dense + sparse (BM25)** (`RETRIEVER=hybrid`, `SPLIT=test`)
+
+| Metric | Initial retrieval | Reranked retrieval |
+| --- | ---: | ---: |
+| NDCG@1 | 0.6512 | 0.8062 |
+| NDCG@3 | — | 0.7821 |
+| NDCG@5 | 0.6715 | 0.7793 |
+| NDCG@10 | 0.6705 | 0.7721 |
+| NDCG@30 | 0.6632 | — |
+| Recall@1 | 0.0150 | 0.0237 |
+| Recall@3 | — | 0.0704 |
+| Recall@5 | 0.0909 | 0.1094 |
+| Recall@10 | 0.1641 | 0.1925 |
+| Recall@30 | 0.3505 | — |
+| MAP@1 | 0.0150 | 0.0237 |
+| MAP@3 | — | 0.0700 |
+| MAP@5 | 0.0750 | 0.1066 |
+| MAP@10 | 0.1335 | 0.1813 |
+| MAP@30 | 0.2783 | — |
+| P@1 | 0.8372 | 0.9535 |
+| P@3 | — | 0.9302 |
+| P@5 | 0.8233 | 0.9163 |
+| P@10 | 0.7884 | 0.8837 |
+| P@30 | 0.6822 | — |
+
 #### Speed–performance trade-off
 
 | Configuration | Initial retrieval time | Reranking time | Total time | Reranked NDCG@3 |
 | --- | ---: | ---: | ---: | ---: |
 | Vector, DIM=512, test (43 queries) | 3.83 s (89.07 ms/query) | 25.02 s (581.90 ms/query) | 28.85 s | 0.7821 |
 | Hybrid, DIM=512, test (43 queries) | 5.13 s (119.30 ms/query) | 39.54 s (919.44 ms/query) | 44.67 s | 0.7821 |
+| Vector, DIM=256, test (43 queries) | 3.69 s (85.74 ms/query) | 23.71 s (551.48 ms/query) | 27.40 s | 0.7821 |
+| Hybrid, DIM=256, test (43 queries) | 4.57 s (106.36 ms/query) | 39.90 s (927.96 ms/query) | 44.48 s | 0.7821 |

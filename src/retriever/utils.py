@@ -128,6 +128,7 @@ def initialize_vector_database(db_directory: str) -> None:
 
     print("Vector database not found. Creating new database...")
     data_path = util.download_and_unzip(DATASET_URL, str(DATASETS_DIR))
+
     if DATASET == "msmarco":
         dev_ids = load_subset_doc_ids(data_path, split="dev")
         test_ids = load_subset_doc_ids(data_path, split="test")
@@ -149,6 +150,15 @@ def initialize_vector_database(db_directory: str) -> None:
                     },
                 )
             )
+
+    if DATASET == "msmarco":
+        found_ids = {doc.metadata["id"] for doc in documents}
+        missing_ids = selected_doc_ids - found_ids
+        if missing_ids:
+            raise RuntimeError(
+                f"{len(missing_ids)} selected MS MARCO documents are missing"
+            )
+        print(f"Selected MS MARCO documents: {len(found_ids)}")
 
     # max_length * 4 = chunk_size
     # chunk_overlap = chunk_size * 0.10 ~ 0.25
