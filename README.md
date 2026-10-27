@@ -231,214 +231,23 @@ Evaluation only exercises retrieval, so vLLM does not need to be running — but
 the embedding and reranker models load onto the GPU, so stop vLLM first with
 `make backend-down` if it is holding the card.
 
+### Retrieval evaluation results
 
-### NFCorpus dataset
+The table shows initial Recall@30 and reranked NDCG@3 for each recorded run.
+Full metrics, timings, commands, and index scopes are in
+[Retrieval evaluation results](docs/retrieval_evaluation.md).
+NFCorpus uses its full corpus; MS MARCO uses documents selected from dev and
+test qrels, so compare retrievers within the same dataset and split.
 
-The following results were recorded after a warm-up query using
-`mixedbread-ai/mxbai-embed-large-v1` for embeddings and
-`BAAI/bge-reranker-v2-m3` for reranking. An em dash indicates that the metric
-is not calculated for that stage: initial retrieval is evaluated at
-`k = 1, 5, 10, 30`, while reranked retrieval is evaluated at
-`k = 1, 3, 5, 10`. 
-(Using FP32 precision and a reranker batch size of 64)
-
-#### DIM = 512
-
-**Dense-only retrieval** (`RETRIEVER=vector`)
-
-| Metric | Initial retrieval | Reranked retrieval |
-| --- | ---: | ---: |
-| NDCG@1 | 0.4321 | 0.4352 |
-| NDCG@3 | — | 0.3825 |
-| NDCG@5 | 0.3691 | 0.3602 |
-| NDCG@10 | 0.3454 | 0.3341 |
-| NDCG@30 | 0.3096 | — |
-| Recall@1 | 0.0410 | 0.0378 |
-| Recall@3 | — | 0.0844 |
-| Recall@5 | 0.1197 | 0.1092 |
-| Recall@10 | 0.1625 | 0.1517 |
-| Recall@30 | 0.2400 | — |
-
-**Hybrid retrieval: dense + sparse (BM25)** (`RETRIEVER=hybrid`)
-
-| Metric | Initial retrieval | Reranked retrieval |
-| --- | ---: | ---: |
-| NDCG@1 | 0.2701 | 0.4198 |
-| NDCG@3 | — | 0.3750 |
-| NDCG@5 | 0.2946 | 0.3593 |
-| NDCG@10 | 0.2943 | 0.3304 |
-| NDCG@30 | 0.2777 | — |
-| Recall@1 | 0.0246 | 0.0377 |
-| Recall@3 | — | 0.0837 |
-| Recall@5 | 0.0962 | 0.1114 |
-| Recall@10 | 0.1552 | 0.1502 |
-| Recall@30 | 0.2397 | — |
-
-#### DIM = 256
-
-**Dense-only retrieval** (`RETRIEVER=vector`)
-
-| Metric | Initial retrieval | Reranked retrieval |
-| --- | ---: | ---: |
-| NDCG@1 | 0.4228 | 0.4290 |
-| NDCG@3 | — | 0.3798 |
-| NDCG@5 | 0.3597 | 0.3577 |
-| NDCG@10 | 0.3252 | 0.3263 |
-| NDCG@30 | 0.2936 | — |
-| Recall@1 | 0.0361 | 0.0367 |
-| Recall@3 | — | 0.0817 |
-| Recall@5 | 0.1142 | 0.1074 |
-| Recall@10 | 0.1509 | 0.1437 |
-| Recall@30 | 0.2308 | — |
-
-**Hybrid retrieval: dense + sparse (BM25)** (`RETRIEVER=hybrid`)
-
-| Metric | Initial retrieval | Reranked retrieval |
-| --- | ---: | ---: |
-| NDCG@1 | 0.2701 | 0.4228 |
-| NDCG@3 | — | 0.3764 |
-| NDCG@5 | 0.2888 | 0.3558 |
-| NDCG@10 | 0.2863 | 0.3253 |
-| NDCG@30 | 0.2658 | — |
-| Recall@1 | 0.0216 | 0.0368 |
-| Recall@3 | — | 0.0811 |
-| Recall@5 | 0.0972 | 0.1064 |
-| Recall@10 | 0.1488 | 0.1435 |
-| Recall@30 | 0.2280 | — |
-
-#### Speed–performance trade-off
-
-| Configuration | Initial retrieval time | Reranking time | Total time | Reranked NDCG@3 |
-| --- | ---: | ---: | ---: | ---: |
-| Vector, DIM=512 | 11.05 s (34.11 ms/query) | 1923.55 s (5936.89 ms/query) | 1934.60 s | 0.3825 |
-| Hybrid, DIM=512 | 14.63 s (45.16 ms/query) | 1926.01 s (5944.48 ms/query) | 1940.64 s | 0.3750 |
-| Vector, DIM=256 | 10.26 s (31.68 ms/query) | 1850.46 s (5711.29 ms/query) | 1860.72 s | 0.3798 |
-| Hybrid, DIM=256 | 14.03 s (43.31 ms/query) | 1850.01 s (5709.91 ms/query) | 1864.04 s | 0.3798 |
-
-### MS MARCO dataset
-
-Retrieval searched an `msmarco` Chroma collection containing
-**16,558 documents**: the union of document IDs appearing in the dev and test
-qrels, including documents with a relevance score of zero. Results below use
-the 43 test queries and their relevance judgments.
-
-These runs used `mixedbread-ai/mxbai-embed-large-v1` for embeddings truncated to
-the dimensions shown below and `BAAI/bge-reranker-v2-m3` for reranking. The
-reranker used FP16 precision and a batch size of 16. Dense-only retrieval
-reranked the top 200 candidates.
-
-#### DIM = 512
-
-**Dense-only retrieval** (`RETRIEVER=vector`, `SPLIT=test`)
-
-| Metric | Initial retrieval | Reranked retrieval |
-| --- | ---: | ---: |
-| NDCG@1 | 0.8178 | 0.8062 |
-| NDCG@3 | — | 0.7821 |
-| NDCG@5 | 0.7764 | 0.7793 |
-| NDCG@10 | 0.7463 | 0.7720 |
-| NDCG@30 | 0.7354 | — |
-| Recall@1 | 0.0232 | 0.0237 |
-| Recall@3 | — | 0.0704 |
-| Recall@5 | 0.1091 | 0.1094 |
-| Recall@10 | 0.1742 | 0.1925 |
-| Recall@30 | 0.3860 | — |
-| MAP@1 | 0.0232 | 0.0237 |
-| MAP@3 | — | 0.0700 |
-| MAP@5 | 0.1065 | 0.1066 |
-| MAP@10 | 0.1661 | 0.1813 |
-| MAP@30 | 0.3371 | — |
-| P@1 | 0.9535 | 0.9535 |
-| P@3 | — | 0.9302 |
-| P@5 | 0.9116 | 0.9163 |
-| P@10 | 0.8395 | 0.8837 |
-| P@30 | 0.7279 | — |
-
-**Hybrid retrieval: dense + sparse (BM25)** (`RETRIEVER=hybrid`, `SPLIT=test`)
-
-| Metric | Initial retrieval | Reranked retrieval |
-| --- | ---: | ---: |
-| NDCG@1 | 0.6124 | 0.8062 |
-| NDCG@3 | — | 0.7821 |
-| NDCG@5 | 0.6575 | 0.7793 |
-| NDCG@10 | 0.6680 | 0.7721 |
-| NDCG@30 | 0.6644 | — |
-| Recall@1 | 0.0139 | 0.0237 |
-| Recall@3 | — | 0.0704 |
-| Recall@5 | 0.0875 | 0.1094 |
-| Recall@10 | 0.1635 | 0.1925 |
-| Recall@30 | 0.3525 | — |
-| MAP@1 | 0.0139 | 0.0237 |
-| MAP@3 | — | 0.0700 |
-| MAP@5 | 0.0731 | 0.1066 |
-| MAP@10 | 0.1335 | 0.1813 |
-| MAP@30 | 0.2792 | — |
-| P@1 | 0.7907 | 0.9535 |
-| P@3 | — | 0.9302 |
-| P@5 | 0.8093 | 0.9163 |
-| P@10 | 0.7977 | 0.8837 |
-| P@30 | 0.6861 | — |
-
-#### DIM = 256
-
-The 256-dimensional index was rebuilt from the selected 16,558 MS MARCO
-documents, producing 16,558 chunks, before this evaluation.
-
-**Dense-only retrieval** (`RETRIEVER=vector`, `SPLIT=test`)
-
-| Metric | Initial retrieval | Reranked retrieval |
-| --- | ---: | ---: |
-| NDCG@1 | 0.8488 | 0.8062 |
-| NDCG@3 | — | 0.7821 |
-| NDCG@5 | 0.7795 | 0.7793 |
-| NDCG@10 | 0.7457 | 0.7721 |
-| NDCG@30 | 0.7354 | — |
-| Recall@1 | 0.0256 | 0.0237 |
-| Recall@3 | — | 0.0704 |
-| Recall@5 | 0.1066 | 0.1094 |
-| Recall@10 | 0.1756 | 0.1925 |
-| Recall@30 | 0.3829 | — |
-| MAP@1 | 0.0256 | 0.0237 |
-| MAP@3 | — | 0.0700 |
-| MAP@5 | 0.1037 | 0.1066 |
-| MAP@10 | 0.1647 | 0.1813 |
-| MAP@30 | 0.3329 | — |
-| P@1 | 0.9767 | 0.9535 |
-| P@3 | — | 0.9302 |
-| P@5 | 0.8977 | 0.9163 |
-| P@10 | 0.8349 | 0.8837 |
-| P@30 | 0.7248 | — |
-
-**Hybrid retrieval: dense + sparse (BM25)** (`RETRIEVER=hybrid`, `SPLIT=test`)
-
-| Metric | Initial retrieval | Reranked retrieval |
-| --- | ---: | ---: |
-| NDCG@1 | 0.6512 | 0.8062 |
-| NDCG@3 | — | 0.7821 |
-| NDCG@5 | 0.6715 | 0.7793 |
-| NDCG@10 | 0.6705 | 0.7721 |
-| NDCG@30 | 0.6632 | — |
-| Recall@1 | 0.0150 | 0.0237 |
-| Recall@3 | — | 0.0704 |
-| Recall@5 | 0.0909 | 0.1094 |
-| Recall@10 | 0.1641 | 0.1925 |
-| Recall@30 | 0.3505 | — |
-| MAP@1 | 0.0150 | 0.0237 |
-| MAP@3 | — | 0.0700 |
-| MAP@5 | 0.0750 | 0.1066 |
-| MAP@10 | 0.1335 | 0.1813 |
-| MAP@30 | 0.2783 | — |
-| P@1 | 0.8372 | 0.9535 |
-| P@3 | — | 0.9302 |
-| P@5 | 0.8233 | 0.9163 |
-| P@10 | 0.7884 | 0.8837 |
-| P@30 | 0.6822 | — |
-
-#### Speed–performance trade-off
-
-| Configuration | Initial retrieval time | Reranking time | Total time | Reranked NDCG@3 |
-| --- | ---: | ---: | ---: | ---: |
-| Vector, DIM=512, test (43 queries) | 3.83 s (89.07 ms/query) | 25.02 s (581.90 ms/query) | 28.85 s | 0.7821 |
-| Hybrid, DIM=512, test (43 queries) | 5.13 s (119.30 ms/query) | 39.54 s (919.44 ms/query) | 44.67 s | 0.7821 |
-| Vector, DIM=256, test (43 queries) | 3.69 s (85.74 ms/query) | 23.71 s (551.48 ms/query) | 27.40 s | 0.7821 |
-| Hybrid, DIM=256, test (43 queries) | 4.57 s (106.36 ms/query) | 39.90 s (927.96 ms/query) | 44.48 s | 0.7821 |
+| Dataset | Split | Dimensions | Retriever | Initial Recall@30 | Reranked NDCG@3 |
+| --- | --- | ---: | --- | ---: | ---: |
+| NFCorpus | dev | 512 | vector | 0.2395 | 0.3693 |
+| NFCorpus | dev | 512 | hybrid | 0.2436 | 0.3657 |
+| NFCorpus | test | 512 | vector | 0.2571 | 0.3930 |
+| NFCorpus | test | 512 | hybrid | 0.2600 | **0.3954** |
+| NFCorpus | dev | 256 | vector | 0.2280 | 0.3644 |
+| NFCorpus | dev | 256 | hybrid | 0.2323 | 0.3642 |
+| NFCorpus | test | 256 | vector | 0.2462 | 0.3899 |
+| NFCorpus | test | 256 | hybrid | 0.2499 | **0.3976** |
+| MS MARCO | test | 256 | vector | 0.3829 | 0.7821 |
+| MS MARCO | test | 256 | hybrid | 0.3750 | 0.7821 |
