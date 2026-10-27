@@ -8,6 +8,7 @@ from langsmith import traceable
 from sentence_transformers import CrossEncoder
 
 from src.config import (
+    DATASET,
     EMBEDDING_MODEL,
     RERANK_RETURN_N,
     RERANKER_MODEL,
@@ -33,6 +34,7 @@ class RAGRetriever:
         self.vector_store = Chroma(
             persist_directory=db_directory,
             embedding_function=self.embedding,
+            collection_name=DATASET,
         )
         # https://zenn.dev/pipon_tech_blog/articles/8cdb27830236c5
         self.retriever = self.vector_store.as_retriever(

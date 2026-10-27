@@ -3,13 +3,16 @@ import logging
 import time
 
 from beir import util
-from beir.datasets.data_loader import GenericDataLoader
+
+# from beir.datasets.data_loader import GenericDataLoader
 from beir.retrieval.evaluation import EvaluateRetrieval
 from tqdm import tqdm
 
 from src.config import (
+    DATASET,
     DATASET_URL,
     DATASETS_DIR,
+    DEFAULT_EVAL_SPLIT,
     EMBED_TRUNCATE_DIM,
     EMBEDDING_MODEL,
     LOG_DIR,
@@ -19,6 +22,7 @@ from src.config import (
     SEARCH_K,
     VECTOR_DB_DIR,
 )
+from src.dataset_utils import load_qrels, load_queries
 from src.retriever.retriever import (
     HybridRetriever,
     RAGRetriever,
@@ -27,14 +31,14 @@ from src.retriever.utils import initialize_vector_database
 
 
 def evaluate_retriever(
-    retriever_type: str = RETRIEVER_TYPE, split: str = "dev"
+    retriever_type: str = RETRIEVER_TYPE, split: str = DEFAULT_EVAL_SPLIT
 ) -> None:
     """
     Evaluate the retriever performance using Recall@30
     for initial retrieval and NDCG@3 for reranked results.
     """
     LOG_DIR.mkdir(parents=True, exist_ok=True)
-    log_file_path = str(LOG_DIR / f"nfcorpus_{retriever_type}_{split}.log")
+    log_file_path = str(LOG_DIR / f"{DATASET}_{retriever_type}_{split}.log")
 
     logging.basicConfig(
         level=logging.INFO,
@@ -46,7 +50,9 @@ def evaluate_retriever(
     )
 
     data_path = util.download_and_unzip(DATASET_URL, str(DATASETS_DIR))
-    corpus, queries, qrels = GenericDataLoader(data_path).load(split=split)
+    # corpus, queries, qrels = GenericDataLoader(data_path).load(split=split)
+    qrels = load_qrels(data_path, split)
+    queries = load_queries(data_path, qrels)
 
     # print(queries.items()) # {'PLAIN-2':
     # 'Do Cholesterol Statin Drugs Cause Breast Cancer?'}
@@ -191,7 +197,7 @@ if __name__ == "__main__":
         "--split",
         type=str,
         choices=["train", "dev", "test"],
-        default="dev",
+        default=DEFAULT_EVAL_SPLIT,
         help="Choose the dataset split to evaluate on",
     )
     args = parser.parse_args()

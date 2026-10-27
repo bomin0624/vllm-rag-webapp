@@ -11,12 +11,14 @@ from sentence_transformers import CrossEncoder
 from src.config import (
     CHUNK_OVERLAP,
     CHUNK_SIZE,
+    DATASET,
     DATASET_URL,
     DATASETS_DIR,
     EMBED_TRUNCATE_DIM,
     EMBEDDING_MODEL,
     RERANK_BATCH_SIZE,
 )
+from src.dataset_utils import load_subset_doc_ids
 
 
 def build_bm25_documents(collection: dict) -> list[Document]:
@@ -90,6 +92,7 @@ def _stored_embedding_dim(db_directory: str) -> int | None:
     store = Chroma(
         persist_directory=db_directory,
         embedding_function=build_embedding_model(EMBEDDING_MODEL),
+        collection_name=DATASET,
     )
     got = store.get(limit=1, include=["embeddings"])
     embeddings = got.get("embeddings")
@@ -110,24 +113,34 @@ def initialize_vector_database(db_directory: str) -> None:
         # TODO: Consider rebuild the vector database if the embedding model or
         # truncate dimension changed.
         stored_dim = _stored_embedding_dim(db_directory)
-        if stored_dim is not None and stored_dim != EMBED_TRUNCATE_DIM:
-            raise RuntimeError(
-                f"Vector database at {db_directory} stores {stored_dim}-dim "
-                f"vectors, but EMBED_TRUNCATE_DIM is {EMBED_TRUNCATE_DIM}. "
-                f"A database is built at a single fixed dimension and is not "
-                f"rebuilt automatically, so delete it and let it rebuild:\n"
-                f"    rm -rf {db_directory} && make run"
-            )
-        return
+        if stored_dim is not None:
+            if stored_dim != EMBED_TRUNCATE_DIM:
+                raise RuntimeError(
+                    f"Vector database at {db_directory} "
+                    f"stores {stored_dim}-dim vectors, "
+                    f"but EMBED_TRUNCATE_DIM is {EMBED_TRUNCATE_DIM}. "
+                    "A database is built at a single fixed dimension "
+                    "and is not rebuilt automatically, "
+                    "so delete it and let it rebuild:\n"
+                    f"    rm -rf {db_directory} && make run"
+                )
+            return
 
     print("Vector database not found. Creating new database...")
     data_path = util.download_and_unzip(DATASET_URL, str(DATASETS_DIR))
+
+    if DATASET == "msmarco":
+        dev_ids = load_subset_doc_ids(data_path, split="dev")
+        test_ids = load_subset_doc_ids(data_path, split="test")
+        selected_doc_ids = dev_ids | test_ids
     corpus_path = Path(data_path) / "corpus.jsonl"
     documents = []
 
     with corpus_path.open(encoding="utf-8") as f:
         for line in f:
             data = json.loads(line)
+            if DATASET == "msmarco" and data["_id"] not in selected_doc_ids:
+                continue
             documents.append(
                 Document(
                     page_content=data["title"] + "." + " " + data["text"],
@@ -137,6 +150,15 @@ def initialize_vector_database(db_directory: str) -> None:
                     },
                 )
             )
+
+    if DATASET == "msmarco":
+        found_ids = {doc.metadata["id"] for doc in documents}
+        missing_ids = selected_doc_ids - found_ids
+        if missing_ids:
+            raise RuntimeError(
+                f"{len(missing_ids)} selected MS MARCO documents are missing"
+            )
+        print(f"Selected MS MARCO documents: {len(found_ids)}")
 
     # max_length * 4 = chunk_size
     # chunk_overlap = chunk_size * 0.10 ~ 0.25
@@ -153,6 +175,7 @@ def initialize_vector_database(db_directory: str) -> None:
         documents=chunks,
         embedding=embedding,
         persist_directory=db_directory,
+        collection_name=DATASET,
         collection_metadata={"hnsw:space": "cosine"},
     )
     print(f"Vector store created and persisted to {db_directory}")

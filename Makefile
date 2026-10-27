@@ -4,7 +4,7 @@ APP ?= main:app
 HOST ?= 0.0.0.0
 PORT ?= 8000
 RETRIEVER ?= hybrid
-SPLIT ?= dev
+SPLIT ?=
 DIM ?= 512
 COMPOSE ?= docker compose
 
@@ -57,7 +57,7 @@ test:
 	$(UV) run $(PYTHON) -m pytest
 
 evaluate:
-	EMBED_TRUNCATE_DIM=$(DIM) $(UV) run $(PYTHON) -m evaluate.evaluation --retriever $(RETRIEVER) --split $(SPLIT)
+	EMBED_TRUNCATE_DIM=$(DIM) $(UV) run $(PYTHON) -m evaluate.evaluation --retriever $(RETRIEVER) $(if $(SPLIT),--split $(SPLIT))
 
 ci: format-check test
 
