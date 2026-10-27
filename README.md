@@ -245,5 +245,9 @@ test qrels, so compare retrievers within the same dataset and split.
 | NFCorpus | dev | 512 | hybrid | 0.2436 | 0.3657 |
 | NFCorpus | test | 512 | vector | 0.2571 | 0.3930 |
 | NFCorpus | test | 512 | hybrid | 0.2600 | **0.3954** |
+| NFCorpus | dev | 256 | vector | 0.2280 | 0.3644 |
+| NFCorpus | dev | 256 | hybrid | 0.2323 | 0.3642 |
+| NFCorpus | test | 256 | vector | 0.2462 | 0.3899 |
+| NFCorpus | test | 256 | hybrid | 0.2499 | **0.3976** |
 | MS MARCO | test | 256 | vector | 0.3829 | 0.7821 |
 | MS MARCO | test | 256 | hybrid | 0.3750 | 0.7821 |

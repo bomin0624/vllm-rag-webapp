@@ -157,6 +157,159 @@ Run with `make evaluate RETRIEVER=hybrid SPLIT=test DIM=512`.
 
 Timings exclude model warm-up.
 
+## NFCorpus evaluation: dev split, 256 dimensions
+
+The full NFCorpus corpus was rebuilt into 4,135 chunks for the vector run; the
+hybrid run reused that index. Both runs evaluated 324 dev queries using
+`mixedbread-ai/mxbai-embed-large-v1` embeddings truncated to 256 dimensions
+and `BAAI/bge-reranker-v2-m3`. The top 200 retrieved chunks were used as
+reranking candidates. Initial retrieval was evaluated at `k = 1, 5, 10, 30`;
+reranked retrieval was evaluated at `k = 1, 3, 5, 10`.
+
+### Vector retrieval
+
+Run with `make evaluate RETRIEVER=vector SPLIT=dev DIM=256`.
+
+| Metric | Initial retrieval | Reranked retrieval |
+| --- | ---: | ---: |
+| NDCG@1 | 0.4198 | 0.4167 |
+| NDCG@3 | — | 0.3644 |
+| NDCG@5 | 0.3583 | 0.3432 |
+| NDCG@10 | 0.3240 | 0.3137 |
+| NDCG@30 | 0.2917 | — |
+| MAP@1 | 0.0345 | 0.0362 |
+| MAP@3 | — | 0.0645 |
+| MAP@5 | 0.0873 | 0.0799 |
+| MAP@10 | 0.1066 | 0.0980 |
+| MAP@30 | 0.1317 | — |
+| Recall@1 | 0.0345 | 0.0362 |
+| Recall@3 | — | 0.0750 |
+| Recall@5 | 0.1141 | 0.1012 |
+| Recall@10 | 0.1508 | 0.1374 |
+| Recall@30 | 0.2280 | — |
+| P@1 | 0.4444 | 0.4383 |
+| P@3 | — | 0.3529 |
+| P@5 | 0.3284 | 0.3130 |
+| P@10 | 0.2537 | 0.2475 |
+| P@30 | 0.1561 | — |
+
+| Stage | Total | Per query |
+| --- | ---: | ---: |
+| Initial retrieval | 23.59 s | 72.80 ms |
+| Reranking | 622.51 s | 1,921.34 ms |
+| Both stages | 646.10 s | — |
+
+### Hybrid retrieval (dense + BM25)
+
+Run with `make evaluate RETRIEVER=hybrid SPLIT=dev DIM=256`.
+
+| Metric | Initial retrieval | Reranked retrieval |
+| --- | ---: | ---: |
+| NDCG@1 | 0.2963 | 0.4167 |
+| NDCG@3 | — | 0.3642 |
+| NDCG@5 | 0.3210 | 0.3439 |
+| NDCG@10 | 0.3086 | 0.3132 |
+| NDCG@30 | 0.2795 | — |
+| MAP@1 | 0.0221 | 0.0370 |
+| MAP@3 | — | 0.0659 |
+| MAP@5 | 0.0750 | 0.0814 |
+| MAP@10 | 0.0963 | 0.0983 |
+| MAP@30 | 0.1229 | — |
+| Recall@1 | 0.0221 | 0.0370 |
+| Recall@3 | — | 0.0763 |
+| Recall@5 | 0.1068 | 0.1022 |
+| Recall@10 | 0.1538 | 0.1367 |
+| Recall@30 | 0.2323 | — |
+| P@1 | 0.3272 | 0.4383 |
+| P@3 | — | 0.3529 |
+| P@5 | 0.3167 | 0.3148 |
+| P@10 | 0.2624 | 0.2466 |
+| P@30 | 0.1603 | — |
+
+| Stage | Total | Per query |
+| --- | ---: | ---: |
+| Initial retrieval | 25.83 s | 79.73 ms |
+| Reranking | 611.88 s | 1,888.51 ms |
+| Both stages | 637.71 s | — |
+
+Timings exclude the initial vector database build and model warm-up.
+
+## NFCorpus evaluation: test split, 256 dimensions
+
+Both runs reused the 4,135-chunk NFCorpus index at 256 dimensions and evaluated
+323 test queries with `mixedbread-ai/mxbai-embed-large-v1` embeddings and
+`BAAI/bge-reranker-v2-m3`. The top 200 retrieved chunks were used as
+reranking candidates. Initial retrieval was evaluated at `k = 1, 5, 10, 30`;
+reranked retrieval was evaluated at `k = 1, 3, 5, 10`.
+
+### Vector retrieval
+
+Run with `make evaluate RETRIEVER=vector SPLIT=test DIM=256`.
+
+| Metric | Initial retrieval | Reranked retrieval |
+| --- | ---: | ---: |
+| NDCG@1 | 0.4350 | 0.4334 |
+| NDCG@3 | — | 0.3899 |
+| NDCG@5 | 0.3680 | 0.3609 |
+| NDCG@10 | 0.3409 | 0.3308 |
+| NDCG@30 | 0.3181 | — |
+| MAP@1 | 0.0546 | 0.0563 |
+| MAP@3 | — | 0.0962 |
+| MAP@5 | 0.1078 | 0.1081 |
+| MAP@10 | 0.1264 | 0.1242 |
+| MAP@30 | 0.1486 | — |
+| Recall@1 | 0.0546 | 0.0563 |
+| Recall@3 | — | 0.1059 |
+| Recall@5 | 0.1341 | 0.1261 |
+| Recall@10 | 0.1729 | 0.1580 |
+| Recall@30 | 0.2462 | — |
+| P@1 | 0.4458 | 0.4396 |
+| P@3 | — | 0.3674 |
+| P@5 | 0.3195 | 0.3071 |
+| P@10 | 0.2536 | 0.2396 |
+| P@30 | 0.1595 | — |
+
+| Stage | Total | Per query |
+| --- | ---: | ---: |
+| Initial retrieval | 31.53 s | 97.63 ms |
+| Reranking | 637.38 s | 1,973.32 ms |
+| Both stages | 668.91 s | — |
+
+### Hybrid retrieval (dense + BM25)
+
+Run with `make evaluate RETRIEVER=hybrid SPLIT=test DIM=256`.
+
+| Metric | Initial retrieval | Reranked retrieval |
+| --- | ---: | ---: |
+| NDCG@1 | 0.3483 | 0.4427 |
+| NDCG@3 | — | 0.3976 |
+| NDCG@5 | 0.3384 | 0.3668 |
+| NDCG@10 | 0.3243 | 0.3391 |
+| NDCG@30 | 0.3118 | — |
+| MAP@1 | 0.0428 | 0.0612 |
+| MAP@3 | — | 0.1012 |
+| MAP@5 | 0.0989 | 0.1143 |
+| MAP@10 | 0.1187 | 0.1308 |
+| MAP@30 | 0.1430 | — |
+| Recall@1 | 0.0428 | 0.0612 |
+| Recall@3 | — | 0.1105 |
+| Recall@5 | 0.1313 | 0.1335 |
+| Recall@10 | 0.1738 | 0.1656 |
+| Recall@30 | 0.2499 | — |
+| P@1 | 0.3591 | 0.4489 |
+| P@3 | — | 0.3695 |
+| P@5 | 0.2997 | 0.3071 |
+| P@10 | 0.2489 | 0.2427 |
+| P@30 | 0.1640 | — |
+
+| Stage | Total | Per query |
+| --- | ---: | ---: |
+| Initial retrieval | 25.45 s | 78.79 ms |
+| Reranking | 603.93 s | 1,869.76 ms |
+| Both stages | 629.38 s | — |
+
+Timings exclude model warm-up.
+
 ## MS MARCO evaluation: test split, 256 dimensions
 
 Both runs evaluated 43 test queries using `mixedbread-ai/mxbai-embed-large-v1`
