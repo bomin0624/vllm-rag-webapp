@@ -3,6 +3,7 @@ from functools import lru_cache
 from langchain_chroma import Chroma
 from langchain_classic.retrievers import EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
+from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langsmith import traceable
 from sentence_transformers import CrossEncoder
@@ -19,7 +20,32 @@ from src.retriever.utils import (
     build_bm25_documents,
     build_embedding_model,
     rerank_documents,
+    tokenize_bm25,
 )
+
+
+class MatchingBM25Retriever(BM25Retriever):
+    def _get_relevant_documents(
+        self,
+        query: str,
+        *,
+        run_manager: CallbackManagerForRetrieverRun,
+    ) -> list[Document]:
+        tokens = self.preprocess_func(query)
+        if not tokens:
+            return []
+
+        # Score every indexed chunk against the query tokens.
+        scores = self.vectorizer.get_scores(tokens)
+        query_terms = set(tokens)
+
+        matched = [
+            i
+            for i, term_counts in enumerate(self.vectorizer.doc_freqs)
+            if query_terms.intersection(term_counts)
+        ]
+        matched.sort(key=lambda i: scores[i], reverse=True)
+        return [self.docs[i] for i in matched[: self.k]]
 
 
 class RAGRetriever:
@@ -36,6 +62,7 @@ class RAGRetriever:
             embedding_function=self.embedding,
             collection_name=DATASET,
         )
+        self.search_k = search_k
         # https://zenn.dev/pipon_tech_blog/articles/8cdb27830236c5
         self.retriever = self.vector_store.as_retriever(
             search_kwargs={"k": search_k}
@@ -49,7 +76,7 @@ class RAGRetriever:
     def retrieve_and_rerank(
         self, query: str, top_n: int = RERANK_RETURN_N
     ) -> list[Document]:
-        initial_docs = self.retriever.invoke(query)
+        initial_docs = self.retriever.invoke(query)[: self.search_k]
         reranked_docs = rerank_documents(
             query, initial_docs, self.reranker, top_n=top_n
         )
@@ -73,12 +100,12 @@ class HybridRetriever(RAGRetriever):
         )
 
         # Get the raw collection data to use for BM25.
-        # TODO: This loads the entire collection into memory.
-        # Consider Elasticsearch or Weaviate.
         collection = self.vector_store.get()
         documents = build_bm25_documents(collection)
 
-        bm25_retriever = BM25Retriever.from_documents(documents)
+        bm25_retriever = MatchingBM25Retriever.from_documents(
+            documents, preprocess_func=tokenize_bm25
+        )
         bm25_retriever.k = search_k
 
         self.retriever = EnsembleRetriever(

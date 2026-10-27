@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 from beir import util
@@ -19,6 +20,10 @@ from src.config import (
     RERANK_BATCH_SIZE,
 )
 from src.dataset_utils import load_subset_doc_ids
+
+
+def tokenize_bm25(text: str) -> list[str]:
+    return re.findall(r"\b\w+\b", text.casefold())
 
 
 def build_bm25_documents(collection: dict) -> list[Document]:
