@@ -5,6 +5,8 @@ repository root; see [Development and evaluation](../README.md#development-and-e
 for setup and options. An em dash means that the metric was not calculated
 at that cutoff for that stage.
 
+For latency comparisons, see [Retrieval speed](#retrieval-speed).
+
 ## NFCorpus evaluation: dev split, 512 dimensions
 
 The full NFCorpus corpus was indexed into 4,135 chunks, and both runs were
@@ -41,12 +43,6 @@ Run with `make evaluate RETRIEVER=vector SPLIT=dev DIM=512`.
 | P@10 | 0.2759 | 0.2457 |
 | P@30 | 0.1671 | — |
 
-| Stage | Total | Per query |
-| --- | ---: | ---: |
-| Initial retrieval | 23.09 s | 71.26 ms |
-| Reranking | 599.46 s | 1,850.20 ms |
-| Both stages | 622.55 s | — |
-
 ### Hybrid retrieval (dense + BM25)
 
 Run with `make evaluate RETRIEVER=hybrid SPLIT=dev DIM=512`.
@@ -73,14 +69,6 @@ Run with `make evaluate RETRIEVER=hybrid SPLIT=dev DIM=512`.
 | P@5 | 0.3191 | 0.3111 |
 | P@10 | 0.2673 | 0.2438 |
 | P@30 | 0.1696 | — |
-
-| Stage | Total | Per query |
-| --- | ---: | ---: |
-| Initial retrieval | 27.07 s | 83.56 ms |
-| Reranking | 599.97 s | 1,851.77 ms |
-| Both stages | 627.05 s | — |
-
-Timings exclude the initial vector database build and model warm-up.
 
 ## NFCorpus evaluation: test split, 512 dimensions
 
@@ -116,12 +104,6 @@ Run with `make evaluate RETRIEVER=vector SPLIT=test DIM=512`.
 | P@10 | 0.2684 | 0.2415 |
 | P@30 | 0.1689 | — |
 
-| Stage | Total | Per query |
-| --- | ---: | ---: |
-| Initial retrieval | 20.48 s | 63.40 ms |
-| Reranking | 604.70 s | 1,872.13 ms |
-| Both stages | 625.18 s | — |
-
 ### Hybrid retrieval (dense + BM25)
 
 Run with `make evaluate RETRIEVER=hybrid SPLIT=test DIM=512`.
@@ -148,14 +130,6 @@ Run with `make evaluate RETRIEVER=hybrid SPLIT=test DIM=512`.
 | P@5 | 0.3145 | 0.3034 |
 | P@10 | 0.2604 | 0.2415 |
 | P@30 | 0.1714 | — |
-
-| Stage | Total | Per query |
-| --- | ---: | ---: |
-| Initial retrieval | 25.95 s | 80.34 ms |
-| Reranking | 601.93 s | 1,863.56 ms |
-| Both stages | 627.88 s | — |
-
-Timings exclude model warm-up.
 
 ## NFCorpus evaluation: dev split, 256 dimensions
 
@@ -193,12 +167,6 @@ Run with `make evaluate RETRIEVER=vector SPLIT=dev DIM=256`.
 | P@10 | 0.2537 | 0.2475 |
 | P@30 | 0.1561 | — |
 
-| Stage | Total | Per query |
-| --- | ---: | ---: |
-| Initial retrieval | 23.59 s | 72.80 ms |
-| Reranking | 622.51 s | 1,921.34 ms |
-| Both stages | 646.10 s | — |
-
 ### Hybrid retrieval (dense + BM25)
 
 Run with `make evaluate RETRIEVER=hybrid SPLIT=dev DIM=256`.
@@ -225,14 +193,6 @@ Run with `make evaluate RETRIEVER=hybrid SPLIT=dev DIM=256`.
 | P@5 | 0.3167 | 0.3148 |
 | P@10 | 0.2624 | 0.2466 |
 | P@30 | 0.1603 | — |
-
-| Stage | Total | Per query |
-| --- | ---: | ---: |
-| Initial retrieval | 25.83 s | 79.73 ms |
-| Reranking | 611.88 s | 1,888.51 ms |
-| Both stages | 637.71 s | — |
-
-Timings exclude the initial vector database build and model warm-up.
 
 ## NFCorpus evaluation: test split, 256 dimensions
 
@@ -269,12 +229,6 @@ Run with `make evaluate RETRIEVER=vector SPLIT=test DIM=256`.
 | P@10 | 0.2536 | 0.2396 |
 | P@30 | 0.1595 | — |
 
-| Stage | Total | Per query |
-| --- | ---: | ---: |
-| Initial retrieval | 31.53 s | 97.63 ms |
-| Reranking | 637.38 s | 1,973.32 ms |
-| Both stages | 668.91 s | — |
-
 ### Hybrid retrieval (dense + BM25)
 
 Run with `make evaluate RETRIEVER=hybrid SPLIT=test DIM=256`.
@@ -301,14 +255,6 @@ Run with `make evaluate RETRIEVER=hybrid SPLIT=test DIM=256`.
 | P@5 | 0.2997 | 0.3071 |
 | P@10 | 0.2489 | 0.2427 |
 | P@30 | 0.1640 | — |
-
-| Stage | Total | Per query |
-| --- | ---: | ---: |
-| Initial retrieval | 25.45 s | 78.79 ms |
-| Reranking | 603.93 s | 1,869.76 ms |
-| Both stages | 629.38 s | — |
-
-Timings exclude model warm-up.
 
 ## MS MARCO evaluation: test split, 256 dimensions
 
@@ -346,12 +292,6 @@ Run with `make evaluate RETRIEVER=vector SPLIT=test DIM=256`.
 | P@10 | 0.8349 | 0.8837 |
 | P@30 | 0.7248 | — |
 
-| Stage | Total | Per query |
-| --- | ---: | ---: |
-| Initial retrieval | 3.27 s | 76.01 ms |
-| Reranking | 23.39 s | 543.98 ms |
-| Both stages | 26.66 s | — |
-
 ### Hybrid retrieval (dense + BM25)
 
 Run with `make evaluate RETRIEVER=hybrid SPLIT=test DIM=256`.
@@ -379,10 +319,28 @@ Run with `make evaluate RETRIEVER=hybrid SPLIT=test DIM=256`.
 | P@10 | 0.8233 | 0.8814 |
 | P@30 | 0.7054 | — |
 
-| Stage | Total | Per query |
-| --- | ---: | ---: |
-| Initial retrieval | 5.15 s | 119.77 ms |
-| Reranking | 24.02 s | 558.63 ms |
-| Both stages | 29.17 s | — |
+## Retrieval speed
 
-Timings exclude model warm-up.
+Timings exclude index building and model warm-up. Each stage shows its mean
+time per query and total time across the queries. Query counts differ by
+split, so use the per-query figures when comparing speed across splits.
+
+### NFCorpus
+
+| Split | Dimensions | Retriever | Queries | Initial retrieval | Reranking | Total |
+| --- | ---: | --- | ---: | ---: | ---: | ---: |
+| dev | 512 | vector | 324 | 71.26 ms/query (23.09 s total) | 1,850.20 ms/query (599.46 s total) | 622.55 s |
+| dev | 512 | hybrid | 324 | 83.56 ms/query (27.07 s total) | 1,851.77 ms/query (599.97 s total) | 627.05 s |
+| dev | 256 | vector | 324 | 72.80 ms/query (23.59 s total) | 1,921.34 ms/query (622.51 s total) | 646.10 s |
+| dev | 256 | hybrid | 324 | 79.73 ms/query (25.83 s total) | 1,888.51 ms/query (611.88 s total) | 637.71 s |
+| test | 512 | vector | 323 | 63.40 ms/query (20.48 s total) | 1,872.13 ms/query (604.70 s total) | 625.18 s |
+| test | 512 | hybrid | 323 | 80.34 ms/query (25.95 s total) | 1,863.56 ms/query (601.93 s total) | 627.88 s |
+| test | 256 | vector | 323 | 97.63 ms/query (31.53 s total) | 1,973.32 ms/query (637.38 s total) | 668.91 s |
+| test | 256 | hybrid | 323 | 78.79 ms/query (25.45 s total) | 1,869.76 ms/query (603.93 s total) | 629.38 s |
+
+### MS MARCO
+
+| Split | Dimensions | Retriever | Queries | Initial retrieval | Reranking | Total |
+| --- | ---: | --- | ---: | ---: | ---: | ---: |
+| test | 256 | vector | 43 | 76.01 ms/query (3.27 s total) | 543.98 ms/query (23.39 s total) | 26.66 s |
+| test | 256 | hybrid | 43 | 119.77 ms/query (5.15 s total) | 558.63 ms/query (24.02 s total) | 29.17 s |
