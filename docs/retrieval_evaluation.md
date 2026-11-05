@@ -16,6 +16,9 @@ reranking, and the top 200 retrieved chunks as reranking candidates. Initial
 retrieval was evaluated at `k = 1, 5, 10, 30`; reranked retrieval was
 evaluated at `k = 1, 3, 5, 10`.
 
+Set `DATASET = "nfcorpus"` in `src/config.py` before running either command in
+this section.
+
 ### Vector retrieval
 
 Run with `make evaluate RETRIEVER=vector SPLIT=dev DIM=512`.
@@ -76,6 +79,9 @@ Both runs reused the 4,135-chunk NFCorpus index and evaluated 323 test queries
 with the same embedding model, reranker, and 200-candidate cutoff as the dev
 runs above. Initial retrieval was evaluated at `k = 1, 5, 10, 30`; reranked
 retrieval was evaluated at `k = 1, 3, 5, 10`.
+
+Set `DATASET = "nfcorpus"` in `src/config.py` before running either command in
+this section.
 
 ### Vector retrieval
 
@@ -140,6 +146,9 @@ and `BAAI/bge-reranker-v2-m3`. The top 200 retrieved chunks were used as
 reranking candidates. Initial retrieval was evaluated at `k = 1, 5, 10, 30`;
 reranked retrieval was evaluated at `k = 1, 3, 5, 10`.
 
+Set `DATASET = "nfcorpus"` in `src/config.py` before running either command in
+this section.
+
 ### Vector retrieval
 
 Run with `make evaluate RETRIEVER=vector SPLIT=dev DIM=256`.
@@ -201,6 +210,9 @@ Both runs reused the 4,135-chunk NFCorpus index at 256 dimensions and evaluated
 `BAAI/bge-reranker-v2-m3`. The top 200 retrieved chunks were used as
 reranking candidates. Initial retrieval was evaluated at `k = 1, 5, 10, 30`;
 reranked retrieval was evaluated at `k = 1, 3, 5, 10`.
+
+Set `DATASET = "nfcorpus"` in `src/config.py` before running either command in
+this section.
 
 ### Vector retrieval
 
@@ -264,6 +276,9 @@ embeddings truncated to 256 dimensions and `BAAI/bge-reranker-v2-m3`. The top
 indexing path selects documents referenced by dev and test qrels, rather than
 the full corpus. Initial retrieval was evaluated at `k = 1, 5, 10, 30`;
 reranked retrieval was evaluated at `k = 1, 3, 5, 10`.
+
+Set `DATASET = "msmarco"` in `src/config.py` before running either command in
+this section.
 
 ### Vector retrieval
 

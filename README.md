@@ -2,9 +2,9 @@
 
 A local retrieval-augmented generation (RAG) web application with a **SvelteKit
 frontend**, a **FastAPI backend**, and a **vLLM inference server**. The backend
-indexes the BEIR `nfcorpus` dataset in Chroma, combines semantic and keyword
-retrieval, reranks relevant passages, and calls a locally served model to
-generate an answer with its supporting source documents.
+indexes the BEIR `nfcorpus` dataset in Chroma by default, combines semantic and
+keyword retrieval, reranks relevant passages, and calls a locally served model
+to generate an answer with its supporting source documents.
 
 The frontend runs separately from Docker Compose and communicates directly with
 the FastAPI service over HTTP/JSON. Docker Compose runs the two GPU-enabled
@@ -15,9 +15,9 @@ backend services: `rag-api` and `vllm`.
 ![System architecture](assets/system_architecture.png)
 
 The vector database is created automatically on the first application start.
-The build downloads `nfcorpus`, splits its documents into 2,048-character
-chunks with 300-character overlap, and stores 512-dimensional normalized
-embeddings in `vectordatabase/`.
+The build downloads the configured dataset (`nfcorpus` by default), splits its
+documents into 2,048-character chunks with 300-character overlap, and stores
+512-dimensional normalized embeddings in `vectordatabase/`.
 
 ## Requirements
 
@@ -213,7 +213,8 @@ make test         # Run the unit tests
 make ci           # Run format checks and tests
 ```
 
-Evaluate retrieval quality against BEIR qrels:
+Evaluate retrieval quality against BEIR qrels. The commands use `DATASET` from
+`src/config.py`, which defaults to `nfcorpus`:
 
 ```bash
 make evaluate
