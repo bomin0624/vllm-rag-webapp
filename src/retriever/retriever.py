@@ -72,11 +72,14 @@ class RAGRetriever:
             reranker_model, model_kwargs={"dtype": "float16"}
         )
 
+    def retrieve(self, query: str) -> list[Document]:
+        return self.retriever.invoke(query)[: self.search_k]
+
     @traceable(name="retrieve-and-rerank", run_type="retriever")
     def retrieve_and_rerank(
         self, query: str, top_n: int = RERANK_RETURN_N
     ) -> list[Document]:
-        initial_docs = self.retriever.invoke(query)[: self.search_k]
+        initial_docs = self.retrieve(query)
         reranked_docs = rerank_documents(
             query, initial_docs, self.reranker, top_n=top_n
         )

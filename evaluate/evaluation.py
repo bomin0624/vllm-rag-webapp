@@ -80,7 +80,7 @@ def evaluate_retriever(
     # Warm up the retriever so the first query's cold-start cost (lazy model
     # loading, CUDA kernel compilation) is excluded from the timed loop.
     warmup_query = next(iter(queries.values()))
-    ragretriever.retriever.invoke(warmup_query)
+    ragretriever.retrieve(warmup_query)
 
     logging.info(f"--- Evaluating Initial Retrieval (Top {SEARCH_K}) ---")
     initial_results = {}
@@ -90,8 +90,7 @@ def evaluate_retriever(
         queries.items(), desc="Initial Retriever"
     ):
         # Score and rerank the same top-ranked fused chunks.
-        retrieved_chunks = ragretriever.retriever.invoke(query_text)
-        retrieved_chunks = retrieved_chunks[:SEARCH_K]
+        retrieved_chunks = ragretriever.retrieve(query_text)
         retriever_cache_result[query_id] = retrieved_chunks
         query_results = {}
         for rank, chunk in enumerate(retrieved_chunks):
