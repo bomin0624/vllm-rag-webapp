@@ -38,3 +38,46 @@ def test_bm25_excludes_zero_match_candidates():
     assert [document.metadata["id"] for document in results] == ["MED-2"]
     assert retriever.invoke("unrelatedterm") == []
     assert retriever.invoke("?!") == []
+
+
+def test_bm25_ranks_noncontiguous_matches_by_score():
+    documents = [
+        Document(page_content="leucine"),
+        Document(page_content="unrelated"),
+        Document(page_content="other"),
+        Document(page_content="leucine leucine leucine"),
+        Document(page_content="misc"),
+    ]
+    retriever = MatchingBM25Retriever.from_documents(
+        documents, preprocess_func=tokenize_bm25
+    )
+    retriever.k = 2
+
+    assert [doc.page_content for doc in retriever.invoke("leucine")] == [
+        "leucine leucine leucine",
+        "leucine",
+    ]
+
+
+def test_bm25_ranks_by_score_and_caps_at_k():
+    texts = [
+        "statins statins statins",
+        "statins diet diet",
+        "statins statins diet",
+        "diet exercise sleep",
+        "running exercise sleep",
+        "sleep quality study",
+        "exercise heart study",
+    ]
+    documents = [
+        Document(page_content=text, metadata={"id": str(i)})
+        for i, text in enumerate(texts)
+    ]
+    retriever = MatchingBM25Retriever.from_documents(
+        documents, preprocess_func=tokenize_bm25
+    )
+    retriever.k = 2
+
+    results = retriever.invoke("statins")
+
+    assert [document.metadata["id"] for document in results] == ["0", "2"]

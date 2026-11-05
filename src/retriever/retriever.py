@@ -35,17 +35,22 @@ class MatchingBM25Retriever(BM25Retriever):
         if not tokens:
             return []
 
-        # Score every indexed chunk against the query tokens.
-        scores = self.vectorizer.get_scores(tokens)
         query_terms = set(tokens)
-
         matched = [
             i
             for i, term_counts in enumerate(self.vectorizer.doc_freqs)
-            if query_terms.intersection(term_counts)
+            if any(term in term_counts for term in query_terms)
         ]
-        matched.sort(key=lambda i: scores[i], reverse=True)
-        return [self.docs[i] for i in matched[: self.k]]
+        if not matched:
+            return []
+
+        scores = self.vectorizer.get_batch_scores(tokens, matched)
+        ranked = sorted(
+            zip(matched, scores, strict=True),
+            key=lambda x: x[1],
+            reverse=True,
+        )
+        return [self.docs[i] for i, _ in ranked[: self.k]]
 
 
 class RAGRetriever:
