@@ -80,7 +80,7 @@ def evaluate_retriever(
     # Warm up the retriever so the first query's cold-start cost (lazy model
     # loading, CUDA kernel compilation) is excluded from the timed loop.
     warmup_query = next(iter(queries.values()))
-    ragretriever.retriever.invoke(warmup_query)
+    ragretriever.retrieve(warmup_query)
 
     logging.info(f"--- Evaluating Initial Retrieval (Top {SEARCH_K}) ---")
     initial_results = {}
@@ -89,9 +89,8 @@ def evaluate_retriever(
     for query_id, query_text in tqdm(
         queries.items(), desc="Initial Retriever"
     ):
-        retrieved_chunks = ragretriever.retriever.invoke(
-            query_text
-        )  # will return the list that already sorted by the retriever
+        # Score and rerank the same top-ranked fused chunks.
+        retrieved_chunks = ragretriever.retrieve(query_text)
         retriever_cache_result[query_id] = retrieved_chunks
         query_results = {}
         for rank, chunk in enumerate(retrieved_chunks):
@@ -100,11 +99,6 @@ def evaluate_retriever(
                 query_results[doc_id] = 1.0 / (rank + 1)
                 # for BEIR to calculate the metrics, we need to assign a score
                 # to each retrieved document.
-        query_results = dict(
-            sorted(query_results.items(), key=lambda x: x[1], reverse=True)[
-                :SEARCH_K
-            ]
-        )
         initial_results[query_id] = query_results
     retrieval_time = time.perf_counter() - retrieval_start
 
