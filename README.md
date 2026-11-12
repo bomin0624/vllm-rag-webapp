@@ -216,7 +216,7 @@ make ci           # Run format checks and tests
 ```
 
 Evaluate retrieval quality against BEIR qrels. The commands use `DATASET` from
-`src/config.py`, which defaults to `nfcorpus`:
+`src/config.py`. Set it to `nfcorpus` or `msmarco` before running:
 
 ```bash
 make evaluate
