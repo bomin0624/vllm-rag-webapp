@@ -15,7 +15,9 @@ backend services: `rag-api` and `vllm`.
 ![System architecture](assets/system_architecture.png)
 
 The vector database is created automatically on the first application start.
-The build downloads the configured dataset (`nfcorpus` by default), splits its
+The build downloads the dataset named by `DATASET` in `src/config.py` (`nfcorpus`
+or `msmarco`). NFCorpus is indexed in full; MS MARCO only includes the passages
+referenced by its dev and test qrels. The build then splits the
 documents into 2,048-character chunks with 300-character overlap, and stores
 512-dimensional normalized embeddings in `vectordatabase/`.
 
