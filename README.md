@@ -2,7 +2,7 @@
 
 A local retrieval-augmented generation (RAG) web application with a **SvelteKit
 frontend**, a **FastAPI backend**, and a **vLLM inference server**. The backend
-indexes the BEIR `nfcorpus` dataset in Chroma by default, combines semantic and
+indexes the BEIR `nfcorpus` or `msmarco` dataset in Chroma, combines semantic and
 keyword retrieval, reranks relevant passages, and calls a locally served model
 to generate an answer with its supporting source documents.
 
