@@ -23,7 +23,7 @@ from src.dataset_utils import load_subset_doc_ids
 
 
 def tokenize_bm25(text: str) -> list[str]:
-    return re.findall(r"\b\w+\b", text.casefold())
+    return re.findall(r"\w+", text.casefold())
 
 
 def build_bm25_documents(collection: dict) -> list[Document]:
