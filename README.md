@@ -10,6 +10,10 @@ The frontend runs separately from Docker Compose and communicates directly with
 the FastAPI service over HTTP/JSON. Docker Compose runs the two GPU-enabled
 backend services: `rag-api` and `vllm`.
 
+## Demo
+
+![RAG web app query demo](assets/rag-demo.gif)
+
 ## System Architecture
 
 ![System architecture](assets/system_architecture.png)
