@@ -16,6 +16,7 @@ services:
       # Unset falls through to the defaults in src/config.py.
       - GENERATE_MODEL
       - LLM_API_KEY
+      - EMBED_TRUNCATE_DIM
     volumes:
       - ./datasets:/app/datasets
       - ./vectordatabase:/app/vectordatabase
